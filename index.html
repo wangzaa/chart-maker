@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chart Maker</title>
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f4f5f7;
+    --color-background-tertiary: #eaecef;
+    --color-background-info: #e8f4fd;
+    --color-background-warning: #fff8e1;
+    --color-background-success: #e8f5e9;
+    --color-background-danger: #fdecea;
+    --color-border-tertiary: rgba(0,0,0,0.10);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --color-border-primary: rgba(0,0,0,0.28);
+    --color-border-info: #90caf9;
+    --color-border-warning: #ffe082;
+    --color-border-success: #a5d6a7;
+    --color-border-danger: #ef9a9a;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4b5563;
+    --color-text-tertiary: #9ca3af;
+    --color-text-info: #1565c0;
+    --color-text-warning: #e65100;
+    --color-text-success: #2e7d32;
+    --color-text-danger: #c62828;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+    --font-serif: Georgia, 'Times New Roman', serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-sans);
+    background: #f0f2f5;
+    min-height: 100vh;
+    padding: 24px 16px;
+    color: var(--color-text-primary);
+  }
+
+  .page-header {
+    max-width: 900px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .page-header h1 { font-size: 20px; font-weight: 600; color: #051C2A; }
+  .page-header span { font-size: 13px; color: var(--color-text-tertiary); }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  /* ── Form elements ── */
+  select, input[type="text"] {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 7px 10px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+  select:focus, input[type="text"]:focus { border-color: #163E93; box-shadow: 0 0 0 2px rgba(22,62,147,0.1); }
+
+  textarea {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px;
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    outline: none;
+    resize: vertical;
+  }
+  textarea:focus { border-color: #163E93; }
+
+  input[type="checkbox"] { cursor: pointer; accent-color: #051C2A; }
+
+  /* ── Cards ── */
+  .app { padding: 0; }
+  .top-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 600px) { .top-bar { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .panel-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .drop-zone {
+    border: 1px dashed var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .drop-zone:hover, .drop-zone.drag-over { background: var(--color-background-secondary); }
+  .drop-zone p { font-size: 13px; color: var(--color-text-secondary); }
+  .drop-zone span { font-size: 11px; color: var(--color-text-tertiary); }
+
+  .or-divider { text-align: center; font-size: 11px; color: var(--color-text-tertiary); margin: 6px 0; }
+
+  textarea.paste-area { width: 100%; height: 72px; }
+
+  /* ── Palette ── */
+  .palette-row { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .palette-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: border-color 0.1s, background 0.1s;
+  }
+  .palette-option:hover { background: var(--color-background-secondary); }
+  .palette-option.active { border-color: #163E93; background: var(--color-background-secondary); }
+  .palette-swatches { display: flex; gap: 3px; flex: 1; }
+  .swatch { width: 18px; height: 18px; border-radius: 3px; flex-shrink: 0; }
+  .swatch.outlined { border: 1px solid var(--color-border-secondary); }
+  .palette-name { font-size: 11px; color: var(--color-text-secondary); white-space: nowrap; }
+  .palette-option.active .palette-name { color: var(--color-text-primary); font-weight: 500; }
+
+  /* ── Toggles ── */
+  .toggles-panel {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .toggle-row-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 6px; white-space: nowrap; }
+  .tog {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer; font-size: 12px; color: var(--color-text-secondary);
+    user-select: none; transition: background 0.1s, color 0.1s, border-color 0.1s; white-space: nowrap;
+  }
+  .tog:hover { background: var(--color-background-secondary); }
+  .tog.on { background: #051C2A; color: #fff; border-color: #051C2A; }
+  .tog .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; flex-shrink: 0; }
+  .tog.on .dot { opacity: 1; background: #30A3DA; }
+  .tog-divider { width: 0.5px; height: 20px; background: var(--color-border-tertiary); margin: 0 2px; }
+
+  /* ── Action bar ── */
+  .action-bar {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; font-size: 13px; font-family: var(--font-sans);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    cursor: pointer; background: transparent; color: var(--color-text-primary);
+    transition: background 0.1s, opacity 0.1s;
+  }
+  .btn:hover { background: var(--color-background-secondary); }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: #051C2A; color: #fff; border-color: #051C2A; }
+  .btn.primary:hover { background: #163E93; border-color: #163E93; }
+  .btn.copy-btn { background: #163E93; color: #fff; border-color: #163E93; }
+  .btn.copy-btn:hover:not(:disabled) { background: #051C2A; border-color: #051C2A; }
+  .btn.copy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn.copy-btn.success { background: #2e7d32; border-color: #2e7d32; }
+
+  /* ── Chart area ── */
+  .chart-area {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1.25rem; min-height: 360px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .chart-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap; }
+  .chart-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .chart-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+  .no-data { display: flex; align-items: center; justify-content: center; height: 260px; color: var(--color-text-tertiary); font-size: 13px; }
+
+  .status-tag { font-size: 11px; padding: 3px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); white-space: nowrap; }
+  .status-tag.loaded { border-color: #70AD47; color: #3B6D11; background: #EAF3DE; }
+
+  .debug-box { font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 7px 10px; margin-top: 6px; line-height: 1.6; border: 0.5px solid var(--color-border-tertiary); }
+  .waterfall-hint { font-size: 11px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; margin-top: 8px; line-height: 1.7; display: none; }
+  .waterfall-hint code { font-family: var(--font-mono); font-size: 10px; background: var(--color-background-primary); padding: 1px 4px; border-radius: 3px; border: 0.5px solid var(--color-border-tertiary); }
+  .hint { font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.4; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #051C2A; color: #fff; font-size: 12px; padding: 9px 18px; border-radius: var(--border-radius-md); z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: #b71c1c; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Chart Maker</h1>
+  <span>Paste data · pick chart type · copy to clipboard</span>
+</div>
+
+<div class="container">
+<div class="app">
+  <div class="top-bar">
+    <div class="panel">
+      <div class="panel-label">Data input</div>
+      <div class="drop-zone" id="dropZone"><p>Drop CSV file here</p><span>or click to browse</span></div>
+      <input type="file" id="fileInput" accept=".csv" style="display:none">
+      <div class="or-divider">— or paste below —</div>
+      <textarea class="paste-area" id="pasteArea" placeholder="Region,2022,2023,2024&#10;North America,42,51,68&#10;Europe,31,38,44&#10;Asia Pacific,55,72,91&#10;Latin America,12,15,19&#10;Middle East,8,11,14"></textarea>
+      <div id="waterfallHint" class="waterfall-hint">
+        <strong>Waterfall:</strong> label + value columns, total appended automatically.<br>
+        <code>Label,Value</code> / <code>New customers,150000</code> / <code>Churn,-30000</code><br>
+        Optional: <code>Subtotal,580000,total</code>
+      </div>
+      <div id="debugBox" class="debug-box" style="display:none;"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">Chart type</div>
+      <select id="chartType">
+        <option value="bar">Bar chart</option>
+        <option value="bar-stacked">Stacked bar</option>
+        <option value="waterfall">Waterfall</option>
+        <option value="line">Line chart</option>
+        <option value="line-area">Area chart</option>
+        <option value="pie">Pie chart</option>
+        <option value="doughnut">Doughnut</option>
+      </select>
+
+      <div style="margin-top:12px;">
+        <div class="panel-label">Chart title</div>
+        <input type="text" id="chartTitleInput" placeholder="Enter chart title...">
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="panel-label">Colour palette</div>
+        <div class="palette-row">
+          <div class="palette-option active" data-pid="brand">
+            <div class="palette-swatches">
+              <div class="swatch" style="background:#051C2A"></div>
+              <div class="swatch" style="background:#163E93"></div>
+              <div class="swatch" style="background:#30A3DA"></div>
+              <div class="swatch" style="background:#A2AAAD"></div>
+              <div class="swatch" style="background:#D9D9D9"></div>
+            </div>
+            <span class="palette-name">Brand</span>
+          </div>
+          <div class="palette-option" data-pid="mono">
+            <div class="palette-swatches">
+              <div class="swatch outlined" style="background:#D9D9D9"></div>
+              <div class="swatch outlined" style="background:#D9D9D9"></div>
+              <div class="swatch outlined" style="background:#D9D9D9"></div>
+              <div class="swatch outlined" style="background:#D9D9D9"></div>
+              <div class="swatch outlined" style="background:#D9D9D9"></div>
+            </div>
+            <span class="palette-name">Mono (white dividers)</span>
+          </div>
+          <div class="palette-option" data-pid="alt">
+            <div class="palette-swatches">
+              <div class="swatch" style="background:#00966C"></div>
+              <div class="swatch" style="background:#113E88"></div>
+              <div class="swatch" style="background:#F28E42"></div>
+              <div class="swatch" style="background:#4DC7B1"></div>
+            </div>
+            <span class="palette-name">Alt</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;display:none;" id="noHeaderSeriesWrap">
+        <div class="panel-label" style="margin-top:8px;">Series label</div>
+        <input type="text" id="noHeaderSeriesName" placeholder="e.g. Revenue, Units...">
+        <p class="hint">Used as axis label since data has no header row.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toggles-panel">
+    <span class="toggle-row-label">Options</span>
+    <div class="tog on"  id="togHeaders"><div class="dot"></div>With headers</div>
+    <div class="tog-divider"></div>
+    <div class="tog"     id="togLabels"><div class="dot"></div>Data labels</div>
+    <div class="tog on"  id="togGrid"><div class="dot"></div>Grid lines</div>
+    <div class="tog on"  id="togLegend"><div class="dot"></div>Legend</div>
+    <div class="tog"     id="togConnectors"><div class="dot"></div>Connectors</div>
+    <div class="tog-divider"></div>
+    <div class="tog"     id="togDataPivot"><div class="dot"></div>Data Pivot</div>
+    <div class="tog"     id="togRotate"><div class="dot"></div>Rotate 90°</div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn primary" id="renderBtn">Render chart</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <div style="flex:1;"></div>
+    <div id="chartStatusTag" class="status-tag">No data loaded</div>
+    <button class="btn copy-btn" id="copyBtn" disabled>
+      <svg id="copyIcon" width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <span id="copyLabel">Copy chart</span>
+    </button>
+  </div>
+
+  <div class="chart-area">
+    <div class="chart-title-row">
+      <div class="chart-title" id="displayTitle">Chart preview</div>
+    </div>
+    <div id="legendContainer" class="legend"></div>
+    <div id="noDataMsg" class="no-data">Load data and click "Render chart" to begin</div>
+    <div style="position:relative;width:100%;display:none;" id="canvasWrapper">
+      <canvas id="mainChart" role="img" aria-label="Chart visualization"></canvas>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script>
+Chart.unregister(ChartDataLabels);
+
+const PALETTES = {
+  brand: { colors:['#051C2A','#163E93','#30A3DA','#A2AAAD','#D9D9D9'], border:null },
+  mono:  { colors:['#D9D9D9'], border:'#fff' },
+  alt:   { colors:['#00966C','#113E88','#F28E42','#4DC7B1'], border:null }
+};
+let activePalette = 'brand';
+
+function getColor(si){ const p=PALETTES[activePalette]; return p.colors[si%p.colors.length]; }
+function getBorder(si){ const p=PALETTES[activePalette]; return p.border||p.colors[si%p.colors.length]; }
+function isLightText(si){ const c=getColor(si); return['#051C2A','#163E93','#113E88','#00966C'].includes(c); }
+
+document.querySelectorAll('.palette-option').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.palette-option').forEach(e=>e.classList.remove('active'));
+    el.classList.add('active'); activePalette=el.dataset.pid;
+    if(PD&&CI)renderChart();
+  });
+});
+
+const WF_POS='#163E93',WF_NEG='#C0392B',WF_TOTAL='#A2AAAD';
+let PD=null,CI=null;
+const S={headers:true,labels:false,grid:true,legend:true,connectors:false,dataPivot:false,rotate:false};
+const TOGGLE_MAP=[['togHeaders','headers'],['togLabels','labels'],['togGrid','grid'],['togLegend','legend'],['togConnectors','connectors'],['togDataPivot','dataPivot'],['togRotate','rotate']];
+TOGGLE_MAP.forEach(([id,key])=>{
+  document.getElementById(id).addEventListener('click',()=>{
+    S[key]=!S[key]; document.getElementById(id).classList.toggle('on',S[key]);
+    if(key==='headers'){document.getElementById('noHeaderSeriesWrap').style.display=S.headers?'none':'block';const raw=document.getElementById('pasteArea').value;if(raw.trim().length>5)loadData(raw);}
+    if(PD&&CI)renderChart();
+  });
+});
+
+let toastT=null;
+function showToast(msg,err=false){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(err?' error':'');clearTimeout(toastT);toastT=setTimeout(()=>{el.className='toast';},3000);}
+
+function transposePD(pd){const{axisLabels,seriesNames,matrix}=pd;return{axisLabels:[...seriesNames],seriesNames:[...axisLabels],matrix:axisLabels.map((_,ri)=>seriesNames.map((_,si)=>matrix[si][ri])),rowTypes:seriesNames.map(()=>'')};}
+
+let _connectorActive=false,_isStacked=false;
+const connectorsPlugin={id:'barConnectors',afterDatasetsDraw(chart){
+  if(!S.connectors||!_connectorActive)return;
+  const isHoriz=chart.options.indexAxis==='y';if(isHoriz&&!_isStacked)return;
+  const ctx=chart.ctx,nS=chart.data.datasets.length,nC=chart.data.labels.length;
+  ctx.save();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(80,80,80,0.4)';ctx.lineWidth=0.9;
+  for(let si=0;si<nS;si++){const meta=chart.getDatasetMeta(si);if(!meta.visible)continue;for(let ci=0;ci<nC-1;ci++){const bA=meta.data[ci],bB=meta.data[ci+1];if(!bA||!bB)continue;ctx.beginPath();if(isHoriz){ctx.moveTo(bA.x,bA.y+bA.height/2);ctx.lineTo(bB.x,bB.y-bB.height/2);}else{ctx.moveTo(bA.x+bA.width/2,bA.y);ctx.lineTo(bB.x-bB.width/2,bB.y);}ctx.stroke();}}
+  ctx.restore();
+}};
+Chart.register(connectorsPlugin);
+
+function parseData(raw){
+  const text=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  if(!lines.length)return null;
+  const sep=lines[0].indexOf('\t')>=0?'\t':',';
+  const grid=lines.map(l=>l.split(sep).map(c=>c.trim().replace(/^["']|["']$/g,'')));
+  const isNum=s=>s!==''&&!isNaN(Number(s));
+  if(S.headers){
+    if(grid.length<2)return null;
+    const hdr=grid[0],body=grid.slice(1),hdr0IsWord=!isNum(hdr[0]);
+    let axisLabels,seriesNames,seriesStart,rowTypes;
+    if(hdr0IsWord){axisLabels=body.map(r=>r[0]);seriesNames=hdr.slice(1);seriesStart=1;rowTypes=body.map(r=>(r[hdr.length]||'').toLowerCase().trim());}
+    else{axisLabels=body.map((_,i)=>`Row ${i+1}`);seriesNames=hdr;seriesStart=0;rowTypes=body.map(()=>'');}
+    if(!seriesNames.length)return null;
+    const matrix=seriesNames.map((_,si)=>body.map(r=>{const v=Number(r[si+seriesStart]);return isNaN(v)?0:v;}));
+    return{axisLabels,seriesNames,matrix,rowTypes};
+  }else{
+    const seriesLabel=document.getElementById('noHeaderSeriesName').value.trim()||'Value';
+    const body=grid,nCols=body[0].length,col0IsText=body.some(r=>!isNum(r[0]));
+    let axisLabels,seriesNames,seriesStart;
+    if(col0IsText){axisLabels=body.map(r=>r[0]);seriesNames=nCols>2?Array.from({length:nCols-1},(_,i)=>`Series ${i+1}`):[seriesLabel];seriesStart=1;}
+    else{axisLabels=body.map((_,i)=>`Row ${i+1}`);seriesNames=Array.from({length:nCols},(_,i)=>i===0?seriesLabel:`Series ${i+1}`);seriesStart=0;}
+    const rowTypes=body.map(r=>(r[seriesNames.length+seriesStart]||'').toLowerCase().trim());
+    const matrix=seriesNames.map((_,si)=>body.map(r=>{const v=Number(r[si+seriesStart]);return isNaN(v)?0:v;}));
+    return{axisLabels,seriesNames,matrix,rowTypes};
+  }
+}
+
+function buildCJSData(pd,ct){
+  const{axisLabels,seriesNames,matrix}=pd,isPie=ct==='pie'||ct==='doughnut',isLine=ct.startsWith('line');
+  if(isPie){const bg=axisLabels.map((_,i)=>getColor(i)),bdr=axisLabels.map((_,i)=>getBorder(i));return{labels:[...axisLabels],datasets:[{data:[...matrix[0]],backgroundColor:bg,borderColor:bdr,borderWidth:2}]};}
+  return{labels:[...axisLabels],datasets:seriesNames.map((name,si)=>({label:name,data:[...matrix[si]],backgroundColor:getColor(si),borderColor:getBorder(si),borderWidth:activePalette==='mono'?2:isLine?2:1,fill:ct==='line-area',tension:0.3,pointRadius:3}))};
+}
+
+function buildScales(isStacked,useHoriz){
+  if(useHoriz)return{y:{type:'category',stacked:isStacked,grid:{display:false},ticks:{font:{size:11},autoSkip:false}},x:{type:'linear',stacked:isStacked,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11}}}};
+  return{x:{type:'category',stacked:isStacked,grid:{display:false},ticks:{font:{size:11},maxRotation:35,autoSkip:false}},y:{type:'linear',stacked:isStacked,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11}}}};
+}
+
+function fmt(v){if(typeof v!=='number')return'';if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return(v/1e3).toFixed(1)+'K';return v%1===0?String(v):v.toFixed(1);}
+
+function makeDLConfig(isStacked,isPie){
+  if(!S.labels)return{display:false};
+  if(isPie)return{display:true,anchor:'center',align:'center',color:(ctx)=>{const bg=ctx.dataset.backgroundColor[ctx.dataIndex];return['#051C2A','#163E93','#113E88','#00966C'].includes(bg)?'#fff':'#222';},font:{size:11,weight:500},formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]+'\n'+fmt(v)};
+  if(isStacked)return{display:true,anchor:'center',align:'center',offset:0,clip:false,color:(ctx)=>isLightText(ctx.datasetIndex)?'#fff':'#222',font:{size:11,weight:500},formatter:fmt};
+  return{display:true,anchor:'end',align:'end',offset:4,clip:false,color:'#555',font:{size:11,weight:500},formatter:fmt};
+}
+
+function getPadding(isStacked,isPie,useHoriz){if(isPie||isStacked||!S.labels)return{top:8,right:16,bottom:4,left:4};if(useHoriz)return{top:8,right:52,bottom:4,left:4};return{top:32,right:16,bottom:4,left:4};}
+
+function buildWFData(pd){
+  const{axisLabels,seriesNames,matrix,rowTypes}=pd;
+  const isWide=matrix[0].length===1&&seriesNames.some(n=>isNaN(Number(n)));
+  let pairs=isWide?seriesNames.map((lbl,i)=>({lbl,v:matrix[i][0],isT:false})):axisLabels.map((lbl,i)=>({lbl,v:matrix[0][i],isT:rowTypes[i]==='total'||rowTypes[i]==='subtotal'}));
+  if(!(pairs.length&&pairs[pairs.length-1].isT))pairs.push({lbl:'Total',v:pairs.reduce((s,p)=>p.isT?p.v:s+p.v,0),isT:true});
+  const n=pairs.length,labels=pairs.map(p=>p.lbl),rawVals=pairs.map(p=>p.v);
+  const floatBase=new Array(n).fill(0),barVals=new Array(n).fill(0),colors=new Array(n).fill(WF_POS),isT=pairs.map(p=>p.isT);
+  let run=0;for(let i=0;i<n;i++){const v=rawVals[i];if(isT[i]){floatBase[i]=0;barVals[i]=v;colors[i]=WF_TOTAL;run=v;}else{floatBase[i]=v>=0?run:run+v;barVals[i]=Math.abs(v);colors[i]=v>=0?WF_POS:WF_NEG;run+=v;}}
+  return{labels,floatBase,barVals,colors,rawVals,isT};
+}
+
+const wfPlugin={id:'wfC',_d:null,afterDraw(c){if(!this._d)return;const{floatBase,barVals}=this._d,ctx=c.ctx,m=c.getDatasetMeta(1),n=m.data.length;ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(120,120,120,0.45)';ctx.lineWidth=1;for(let i=0;i<n-1;i++){const b=m.data[i],nb=m.data[i+1];if(S.rotate){const rx=c.scales.x.getPixelForValue(floatBase[i]+barVals[i]);ctx.beginPath();ctx.moveTo(rx,b.y-b.height/2);ctx.lineTo(rx,nb.y+nb.height/2);ctx.stroke();}else{const ty=c.scales.y.getPixelForValue(floatBase[i]+barVals[i]);ctx.beginPath();ctx.moveTo(b.x+b.width/2,ty);ctx.lineTo(nb.x-nb.width/2,ty);ctx.stroke();}}ctx.restore();}};
+Chart.register(wfPlugin);
+const makeBg={beforeDraw(c){c.ctx.clearRect(0,0,c.width,c.height);}};
+
+function renderChart(){
+  if(!PD){alert('Please load data first.');return;}
+  const ct=document.getElementById('chartType').value,title=document.getElementById('chartTitleInput').value||'Chart';
+  const isPie=ct==='pie'||ct==='doughnut',isLine=ct.startsWith('line'),useHoriz=S.rotate&&!isPie;
+  const pd=(S.dataPivot&&!isPie&&ct!=='waterfall')?transposePD(PD):PD;
+  document.getElementById('displayTitle').textContent=title;
+  document.getElementById('noDataMsg').style.display='none';
+  const wrapper=document.getElementById('canvasWrapper');wrapper.style.display='block';
+  if(CI){CI.destroy();CI=null;}
+  if(ct==='waterfall'){
+    _connectorActive=false;_isStacked=false;const wf=buildWFData(PD);wfPlugin._d=wf;
+    wrapper.style.height=(useHoriz?Math.max(280,wf.labels.length*44+80):400)+'px';
+    const wfLbl=S.labels?{display:true,anchor:'end',align:useHoriz?'right':'top',offset:4,clip:false,color:ctx=>wf.isT[ctx.dataIndex]?'#666':(wf.rawVals[ctx.dataIndex]>=0?WF_POS:WF_NEG),font:{size:11,weight:500},formatter:(_,ctx)=>{const r=wf.rawVals[ctx.dataIndex],t=wf.isT[ctx.dataIndex];return t?fmt(r):(r>=0?'+':'')+fmt(r);}}:{display:false};
+    const wfSc=useHoriz?{x:{type:'linear',stacked:true,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11},callback:v=>v.toLocaleString()}},y:{type:'category',stacked:true,grid:{display:false},ticks:{font:{size:11},autoSkip:false}}}:{x:{type:'category',stacked:true,grid:{display:false},ticks:{font:{size:11},maxRotation:0,autoSkip:false}},y:{type:'linear',stacked:true,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11},callback:v=>v.toLocaleString()}}};
+    CI=new Chart(document.getElementById('mainChart'),{type:'bar',data:{labels:wf.labels,datasets:[{label:'_b',data:wf.floatBase,backgroundColor:'transparent',borderColor:'transparent',borderWidth:0,barPercentage:0.6,categoryPercentage:0.7,datalabels:{display:false}},{label:'V',data:wf.barVals,backgroundColor:wf.colors,borderColor:wf.colors,borderWidth:1,barPercentage:0.6,categoryPercentage:0.7,datalabels:wfLbl}]},options:{indexAxis:useHoriz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return null;const r=wf.rawVals[ctx.dataIndex],t=wf.isT[ctx.dataIndex];return' '+(t?'Total: '+r.toLocaleString():(r>=0?'+':'')+r.toLocaleString());}}},datalabels:{display:false}},scales:wfSc,layout:{padding:useHoriz?{top:8,right:S.labels?52:16,bottom:4,left:8}:{top:S.labels?32:8,right:24,bottom:4,left:8}}},plugins:[makeBg,ChartDataLabels]});
+    document.getElementById('legendContainer').innerHTML=S.legend?[{l:'Increase',c:WF_POS},{l:'Decrease',c:WF_NEG},{l:'Total',c:WF_TOTAL}].map(x=>`<div class="legend-item"><div class="legend-swatch" style="background:${x.c}"></div>${x.l}</div>`).join(''):'';
+    document.getElementById('copyBtn').disabled=false;return;
+  }
+  const isStacked=ct==='bar-stacked';_connectorActive=!isPie&&!isLine;_isStacked=isStacked;
+  const cjsData=buildCJSData(pd,ct),nRows=pd.axisLabels.length,nSeries=pd.seriesNames.length;
+  wrapper.style.height=isPie?'320px':useHoriz?Math.max(280,nRows*(nSeries>1?nSeries*18+24:34)+80)+'px':'300px';
+  const type=isPie?ct:isLine?'line':'bar',scales=isPie?{}:buildScales(isStacked,useHoriz),padding=getPadding(isStacked,isPie,useHoriz);
+  const dlCfg=makeDLConfig(isStacked,isPie);
+  if(isPie){cjsData.datasets[0].datalabels=dlCfg;}else{cjsData.datasets.forEach(ds=>{ds.datalabels=dlCfg;});}
+  CI=new Chart(document.getElementById('mainChart'),{type,data:cjsData,options:{indexAxis:useHoriz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true},datalabels:{display:false}},scales,layout:{padding}},plugins:[makeBg,ChartDataLabels]});
+  if(S.legend&&S.headers){
+    if(isPie){document.getElementById('legendContainer').innerHTML=cjsData.labels.map((lbl,i)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(i)}"></div>${lbl}</div>`).join('');}
+    else if(cjsData.datasets.length>0){document.getElementById('legendContainer').innerHTML=cjsData.datasets.map((ds,si)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(si)}"></div>${ds.label}</div>`).join('');}
+  }else{document.getElementById('legendContainer').innerHTML='';}
+  document.getElementById('copyBtn').disabled=false;
+}
+
+function loadData(raw){
+  const result=parseData(raw),dbg=document.getElementById('debugBox');
+  if(!result||!result.axisLabels.length){document.getElementById('chartStatusTag').textContent='Parse error';document.getElementById('chartStatusTag').className='status-tag';dbg.style.display='block';dbg.textContent='Could not parse. Check format.';PD=null;return;}
+  PD=result;dbg.style.display='block';
+  dbg.innerHTML=`<b>Axis (${result.axisLabels.length}):</b> ${result.axisLabels.join(' | ')}<br><b>Series:</b> ${result.seriesNames.join(', ')}<br><b>Row 0:</b> ${result.matrix.map((col,i)=>result.seriesNames[i]+'='+col[0]).join(', ')}`;
+  document.getElementById('chartStatusTag').textContent=`✓ ${result.axisLabels.length} rows, ${result.seriesNames.length} series`;
+  document.getElementById('chartStatusTag').className='status-tag loaded';
+}
+
+const dz=document.getElementById('dropZone'),fi=document.getElementById('fileInput'),pa=document.getElementById('pasteArea');
+dz.addEventListener('click',()=>fi.click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{pa.value=ev.target.result;loadData(ev.target.result);};r.readAsText(f);});
+fi.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{pa.value=ev.target.result;loadData(ev.target.result);};r.readAsText(f);});
+pa.addEventListener('input',()=>{if(pa.value.trim().length>5)loadData(pa.value);});
+document.getElementById('chartType').addEventListener('change',()=>{document.getElementById('waterfallHint').style.display=document.getElementById('chartType').value==='waterfall'?'block':'none';if(PD&&CI)renderChart();});
+document.getElementById('renderBtn').addEventListener('click',renderChart);
+document.getElementById('chartTitleInput').addEventListener('change',()=>{if(PD&&CI)renderChart();});
+document.getElementById('noHeaderSeriesName').addEventListener('change',()=>{const raw=pa.value;if(raw.trim().length>5)loadData(raw);if(PD&&CI)renderChart();});
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  PD=null;if(CI){CI.destroy();CI=null;}pa.value='';
+  document.getElementById('debugBox').style.display='none';document.getElementById('legendContainer').innerHTML='';
+  document.getElementById('canvasWrapper').style.display='none';document.getElementById('noDataMsg').style.display='flex';
+  document.getElementById('chartStatusTag').textContent='No data loaded';document.getElementById('chartStatusTag').className='status-tag';
+  document.getElementById('displayTitle').textContent='Chart preview';document.getElementById('copyBtn').disabled=true;document.getElementById('copyLabel').textContent='Copy chart';
+  wfPlugin._d=null;_connectorActive=false;_isStacked=false;
+});
+
+async function buildPNG(){return new Promise(resolve=>{if(!CI)return resolve(null);const cv=document.getElementById('mainChart'),lg=document.getElementById('legendContainer');const SC=2,lgH=(S.legend&&lg.children.length>0)?lg.offsetHeight+12:0;const off=document.createElement('canvas');off.width=cv.offsetWidth*SC;off.height=(cv.offsetHeight+lgH)*SC;const ctx=off.getContext('2d');ctx.scale(SC,SC);if(lgH>0){ctx.save();const items=lg.querySelectorAll('.legend-item');let x=0;items.forEach(it=>{const sw=it.querySelector('.legend-swatch');ctx.fillStyle=sw?sw.style.background:'#888';ctx.fillRect(x,6,10,10);ctx.fillStyle='#444';ctx.font='11px sans-serif';const lb=it.textContent.trim();ctx.fillText(lb,x+14,15);x+=ctx.measureText(lb).width+34;});ctx.restore();ctx.translate(0,lgH);}ctx.drawImage(cv,0,0,cv.offsetWidth,cv.offsetHeight);off.toBlob(blob=>resolve(blob),'image/png');});}
+
+document.getElementById('copyBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('copyBtn'),lbl=document.getElementById('copyLabel');
+  if(!navigator.clipboard||!window.ClipboardItem){const blob=await buildPNG();if(!blob)return;const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chart.png';a.click();URL.revokeObjectURL(url);showToast('Clipboard not supported — PNG downloaded');return;}
+  btn.disabled=true;lbl.textContent='Copying…';
+  try{const blob=await buildPNG();if(!blob)throw new Error('no chart');await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);btn.classList.add('success');lbl.textContent='Copied!';document.getElementById('copyIcon').innerHTML=`<path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;showToast('Chart copied — paste anywhere with Ctrl+V / Cmd+V');setTimeout(()=>{btn.classList.remove('success');btn.disabled=false;lbl.textContent='Copy chart';document.getElementById('copyIcon').innerHTML=`<rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>`;},2500);}
+  catch(err){btn.disabled=false;lbl.textContent='Copy chart';const blob=await buildPNG();if(blob){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chart.png';a.click();URL.revokeObjectURL(url);showToast('Clipboard blocked — PNG downloaded',true);}else showToast('Could not copy',true);}
+});
+</script>
+</body>
+</html>
