@@ -5,197 +5,146 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chart Maker</title>
 <style>
-  :root {
-    --color-background-primary: #ffffff;
-    --color-background-secondary: #f4f5f7;
-    --color-background-tertiary: #eaecef;
-    --color-border-tertiary: rgba(0,0,0,0.10);
-    --color-border-secondary: rgba(0,0,0,0.18);
-    --color-border-primary: rgba(0,0,0,0.28);
-    --color-text-primary: #111827;
-    --color-text-secondary: #4b5563;
-    --color-text-tertiary: #9ca3af;
-    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    --font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-sans); background: #f0f2f5; min-height: 100vh; padding: 24px 16px; color: var(--color-text-primary); }
-  .page-header { max-width: 960px; margin: 0 auto 20px; display: flex; align-items: baseline; gap: 10px; }
-  .page-header h1 { font-size: 20px; font-weight: 600; color: #051C2A; }
-  .page-header span { font-size: 13px; color: var(--color-text-tertiary); }
-  .container { max-width: 960px; margin: 0 auto; }
-  select, input[type="text"] { width: 100%; font-family: var(--font-sans); font-size: 13px; padding: 7px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; appearance: none; -webkit-appearance: none; }
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
-  select:focus, input[type="text"]:focus { border-color: #163E93; box-shadow: 0 0 0 2px rgba(22,62,147,0.1); }
-  textarea { font-family: var(--font-mono); font-size: 12px; padding: 8px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; resize: vertical; }
-  textarea:focus { border-color: #163E93; }
-  .app { padding: 0; }
-  .top-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  @media (max-width: 600px) { .top-bar { grid-template-columns: 1fr; } }
-  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-  .panel-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .drop-zone { border: 1px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 1rem; text-align: center; cursor: pointer; transition: background 0.15s; min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-  .drop-zone:hover, .drop-zone.drag-over { background: var(--color-background-secondary); }
-  .drop-zone p { font-size: 13px; color: var(--color-text-secondary); }
-  .drop-zone span { font-size: 11px; color: var(--color-text-tertiary); }
-  .or-divider { text-align: center; font-size: 11px; color: var(--color-text-tertiary); margin: 6px 0; }
-  textarea.paste-area { width: 100%; height: 72px; }
-  .palette-row { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-  .palette-option { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); cursor: pointer; transition: border-color 0.1s, background 0.1s; }
-  .palette-option:hover { background: var(--color-background-secondary); }
-  .palette-option.active { border-color: #163E93; background: var(--color-background-secondary); }
-  .palette-swatches { display: flex; gap: 3px; flex: 1; }
-  .swatch { width: 18px; height: 18px; border-radius: 3px; flex-shrink: 0; }
-  .swatch.outlined { border: 1px solid var(--color-border-secondary); }
-  .palette-name { font-size: 11px; color: var(--color-text-secondary); white-space: nowrap; }
-  .palette-option.active .palette-name { color: var(--color-text-primary); font-weight: 500; }
-  .toggles-panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 0.85rem 1.25rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-  .toggle-row-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 6px; white-space: nowrap; }
-  .tog { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 12px; color: var(--color-text-secondary); user-select: none; transition: background 0.1s, color 0.1s, border-color 0.1s; white-space: nowrap; }
-  .tog:hover { background: var(--color-background-secondary); }
-  .tog.on { background: #051C2A; color: #fff; border-color: #051C2A; }
-  .tog .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; flex-shrink: 0; }
-  .tog.on .dot { opacity: 1; background: #30A3DA; }
-  .tog-divider { width: 0.5px; height: 20px; background: var(--color-border-tertiary); margin: 0 2px; }
-  .action-bar { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 0.85rem 1.25rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px; font-family: var(--font-sans); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; background: transparent; color: var(--color-text-primary); transition: background 0.1s, opacity 0.1s; }
-  .btn:hover { background: var(--color-background-secondary); }
-  .btn:active { transform: scale(0.98); }
-  .btn.primary { background: #051C2A; color: #fff; border-color: #051C2A; }
-  .btn.primary:hover { background: #163E93; border-color: #163E93; }
-  .btn.copy-btn { background: #163E93; color: #fff; border-color: #163E93; }
-  .btn.copy-btn:hover:not(:disabled) { background: #051C2A; border-color: #051C2A; }
-  .btn.copy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn.copy-btn.success { background: #2e7d32; border-color: #2e7d32; }
-  .chart-area { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; min-height: 360px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-  .chart-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap; }
-  .chart-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
-  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
-  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
-  .no-data { display: flex; align-items: center; justify-content: center; height: 260px; color: var(--color-text-tertiary); font-size: 13px; }
-  .status-tag { font-size: 11px; padding: 3px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); white-space: nowrap; }
-  .status-tag.loaded { border-color: #70AD47; color: #3B6D11; background: #EAF3DE; }
-  .debug-box { font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 7px 10px; margin-top: 6px; line-height: 1.6; border: 0.5px solid var(--color-border-tertiary); }
-  .waterfall-hint { font-size: 11px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; margin-top: 8px; line-height: 1.7; display: none; }
-  .waterfall-hint code { font-family: var(--font-mono); font-size: 10px; background: var(--color-background-primary); padding: 1px 4px; border-radius: 3px; border: 0.5px solid var(--color-border-tertiary); }
-  .hint { font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.4; }
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #051C2A; color: #fff; font-size: 12px; padding: 9px 18px; border-radius: var(--border-radius-md); z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.error { background: #b71c1c; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e8e8e8;min-height:100vh;padding:1.5rem;}
+:root{--bg0:#1a1a1a;--bg1:#242424;--bg2:#2e2e2e;--border:#3a3a3a;--border2:#4a4a4a;--text1:#e8e8e8;--text2:#aaa;--text3:#666;}
+.app{max-width:960px;margin:0 auto;}
+h1{font-size:18px;font-weight:600;color:var(--text1);margin-bottom:1.25rem;letter-spacing:-0.02em;}
+.top-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.panel{background:var(--bg1);border:0.5px solid var(--border);border-radius:10px;padding:1rem 1.25rem;}
+.panel-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.drop-zone{border:1px dashed var(--border2);border-radius:7px;padding:.9rem;text-align:center;cursor:pointer;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:background .15s;}
+.drop-zone:hover,.drop-zone.drag-over{background:var(--bg2);}
+.drop-zone p{font-size:13px;color:var(--text2);}
+.drop-zone span{font-size:11px;color:var(--text3);}
+.or-divider{text-align:center;font-size:11px;color:var(--text3);margin:5px 0;}
+textarea.paste-area{width:100%;height:88px;font-size:11.5px;font-family:'SF Mono',Menlo,Consolas,monospace;resize:vertical;border:0.5px solid var(--border);border-radius:7px;padding:8px;background:var(--bg2);color:var(--text1);}
+textarea.paste-area:focus{outline:none;border-color:#30A3DA;}
+select,input[type=text]{width:100%;font-size:13px;padding:6px 9px;border:0.5px solid var(--border);border-radius:7px;background:var(--bg2);color:var(--text1);}
+select:focus,input[type=text]:focus{outline:none;border-color:#30A3DA;}
+.palette-row{display:flex;flex-direction:column;gap:5px;margin-top:4px;}
+.palette-option{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:border-color .1s,background .1s;}
+.palette-option:hover{background:var(--bg2);}
+.palette-option.active{border-color:#163E93;background:var(--bg2);}
+.palette-swatches{display:flex;gap:3px;flex:1;}
+.swatch{width:17px;height:17px;border-radius:3px;flex-shrink:0;}
+.swatch.outlined{border:1px solid var(--border2);}
+.palette-name{font-size:11px;color:var(--text2);}
+.palette-option.active .palette-name{color:var(--text1);font-weight:500;}
+.toggles-panel{background:var(--bg1);border:0.5px solid var(--border);border-radius:10px;padding:.8rem 1.25rem;margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.toggle-row-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-right:4px;white-space:nowrap;}
+.tog{display:flex;align-items:center;gap:5px;padding:4px 10px;border:0.5px solid var(--border2);border-radius:6px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none;transition:background .1s,color .1s,border-color .1s;white-space:nowrap;}
+.tog:hover{background:var(--bg2);}
+.tog.on{background:#051C2A;color:#fff;border-color:#163E93;}
+.tog .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0;}
+.tog.on .dot{opacity:1;background:#30A3DA;}
+.tog-divider{width:.5px;height:18px;background:var(--border);margin:0 2px;}
+.action-bar{background:var(--bg1);border:0.5px solid var(--border);border-radius:10px;padding:.8rem 1.25rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;font-size:13px;border:0.5px solid var(--border2);border-radius:7px;cursor:pointer;background:transparent;color:var(--text1);transition:background .1s;}
+.btn:hover{background:var(--bg2);}
+.btn.primary{background:#051C2A;color:#fff;border-color:#163E93;}
+.btn.primary:hover{background:#163E93;}
+.btn.copy-btn{background:#163E93;color:#fff;border-color:#163E93;}
+.btn.copy-btn:hover:not(:disabled){background:#051C2A;}
+.btn.copy-btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.copy-btn.success{background:#2e7d32;border-color:#2e7d32;}
+.chart-area{background:var(--bg1);border:0.5px solid var(--border);border-radius:10px;padding:1.25rem;min-height:360px;}
+.chart-title{font-size:14px;font-weight:500;color:var(--text1);margin-bottom:1rem;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);}
+.legend-swatch{width:10px;height:10px;border-radius:2px;}
+.no-data{display:flex;align-items:center;justify-content:center;height:260px;color:var(--text3);font-size:13px;}
+.status-tag{font-size:11px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border);color:var(--text2);}
+.status-tag.loaded{border-color:#70AD47;color:#a8d87a;background:rgba(70,173,71,.12);}
+.status-tag.warn{border-color:#e8a000;color:#ffc940;background:rgba(232,160,0,.12);}
+.debug-box{font-size:11px;font-family:'SF Mono',Menlo,monospace;color:var(--text2);background:var(--bg2);border-radius:7px;padding:7px 10px;margin-top:6px;line-height:1.6;border:.5px solid var(--border);}
+.chart-hint{font-size:11px;color:var(--text2);background:var(--bg2);border-radius:7px;padding:7px 10px;margin-top:8px;line-height:1.7;display:none;}
+.hint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#051C2A;color:#fff;font-size:12px;padding:9px 18px;border-radius:7px;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;border:1px solid #163E93;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#7f1d1d;border-color:#b91c1c;}
+@media(max-width:640px){.top-bar{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-
-<div class="page-header">
-  <h1>Chart Maker</h1>
-  <span>Paste data · pick chart type · copy to clipboard</span>
-</div>
-
-<div class="container">
 <div class="app">
-  <div class="top-bar">
-    <div class="panel">
-      <div class="panel-label">Data input</div>
-      <div class="drop-zone" id="dropZone"><p>Drop CSV file here</p><span>or click to browse</span></div>
-      <input type="file" id="fileInput" accept=".csv" style="display:none">
-      <div class="or-divider">— or paste below —</div>
-      <textarea class="paste-area" id="pasteArea" placeholder="Region,2022,2023,2024&#10;North America,42,51,68&#10;Europe,31,38,44&#10;Asia Pacific,55,72,91&#10;Latin America,12,15,19&#10;Middle East,8,11,14"></textarea>
-      <div id="waterfallHint" class="waterfall-hint">
-        <strong>Waterfall:</strong> label + value columns, total appended automatically.<br>
-        <code>Label,Value</code> / <code>New customers,150000</code> / <code>Churn,-30000</code><br>
-        Optional: <code>Subtotal,580000,total</code>
-      </div>
-      <div id="debugBox" class="debug-box" style="display:none;"></div>
+<h1>Chart Maker</h1>
+<div class="top-bar">
+  <div class="panel">
+    <div class="panel-label">Data input</div>
+    <div class="drop-zone" id="dropZone"><p>Drop CSV file here</p><span>or click to browse</span></div>
+    <input type="file" id="fileInput" accept=".csv" style="display:none">
+    <div class="or-divider">— or paste below —</div>
+    <textarea class="paste-area" id="pasteArea" placeholder="Region,2022,2023,2024&#10;North America,42,51,68&#10;Europe,31,38,44&#10;Asia Pacific,55,72,91&#10;Latin America,12,15,19&#10;Middle East,8,11,14&#10;Growth,62,65,76"></textarea>
+    <div id="chartHint" class="chart-hint"></div>
+    <div id="debugBox" class="debug-box" style="display:none;"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-label">Chart type</div>
+    <select id="chartType">
+      <option value="bar">Bar chart</option>
+      <option value="bar-stacked">Stacked bar</option>
+      <option value="combi">Combi (bar + line)</option>
+      <option value="waterfall">Waterfall</option>
+      <option value="line">Line chart</option>
+      <option value="line-area">Area chart</option>
+      <option value="pie">Pie chart</option>
+      <option value="doughnut">Doughnut</option>
+    </select>
+    <div style="margin-top:11px;"><div class="panel-label">Chart title</div>
+      <input type="text" id="chartTitleInput" placeholder="Enter chart title...">
     </div>
-
-    <div class="panel">
-      <div class="panel-label">Chart type</div>
-      <select id="chartType">
-        <option value="bar">Bar chart</option>
-        <option value="bar-stacked">Stacked bar</option>
-        <option value="waterfall">Waterfall</option>
-        <option value="line">Line chart</option>
-        <option value="line-area">Area chart</option>
-        <option value="pie">Pie chart</option>
-        <option value="doughnut">Doughnut</option>
-      </select>
-
-      <div style="margin-top:12px;">
-        <div class="panel-label">Chart title</div>
-        <input type="text" id="chartTitleInput" placeholder="Enter chart title...">
-      </div>
-
-      <div style="margin-top:12px;">
-        <div class="panel-label">Colour palette</div>
-        <div class="palette-row">
-          <div class="palette-option active" data-pid="brand">
-            <div class="palette-swatches"><div class="swatch" style="background:#051C2A"></div><div class="swatch" style="background:#163E93"></div><div class="swatch" style="background:#30A3DA"></div><div class="swatch" style="background:#A2AAAD"></div><div class="swatch" style="background:#D9D9D9"></div></div>
-            <span class="palette-name">Brand</span>
-          </div>
-          <div class="palette-option" data-pid="mono">
-            <div class="palette-swatches"><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div></div>
-            <span class="palette-name">Mono (white dividers)</span>
-          </div>
-          <div class="palette-option" data-pid="alt">
-            <div class="palette-swatches"><div class="swatch" style="background:#00966C"></div><div class="swatch" style="background:#113E88"></div><div class="swatch" style="background:#F28E42"></div><div class="swatch" style="background:#4DC7B1"></div></div>
-            <span class="palette-name">Alt</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;display:none;" id="noHeaderSeriesWrap">
-        <div class="panel-label" style="margin-top:8px;">Series label</div>
-        <input type="text" id="noHeaderSeriesName" placeholder="e.g. Revenue, Units...">
-        <p class="hint">Used as axis label since data has no header row.</p>
+    <div style="margin-top:11px;">
+      <div class="panel-label">Colour palette</div>
+      <div class="palette-row">
+        <div class="palette-option active" data-pid="blue"><div class="palette-swatches"><div class="swatch" style="background:#051C2A"></div><div class="swatch" style="background:#163E93"></div><div class="swatch" style="background:#30A3DA"></div><div class="swatch" style="background:#A2AAAD"></div><div class="swatch" style="background:#D9D9D9"></div></div><span class="palette-name">Blue</span></div>
+        <div class="palette-option" data-pid="mono"><div class="palette-swatches"><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div></div><span class="palette-name">Mono</span></div>
+        <div class="palette-option" data-pid="alt"><div class="palette-swatches"><div class="swatch" style="background:#00966C"></div><div class="swatch" style="background:#113E88"></div><div class="swatch" style="background:#F28E42"></div><div class="swatch" style="background:#4DC7B1"></div></div><span class="palette-name">Alt</span></div>
       </div>
     </div>
-  </div>
-
-  <div class="toggles-panel">
-    <span class="toggle-row-label">Options</span>
-    <div class="tog on"  id="togHeaders"><div class="dot"></div>With headers</div>
-    <div class="tog-divider"></div>
-    <div class="tog"     id="togLabels"><div class="dot"></div>Data labels</div>
-    <div class="tog on"  id="togGrid"><div class="dot"></div>Grid lines</div>
-    <div class="tog on"  id="togLegend"><div class="dot"></div>Legend</div>
-    <div class="tog"     id="togConnectors"><div class="dot"></div>Connectors</div>
-    <div class="tog"     id="togCAGR"><div class="dot"></div>CAGR</div>
-    <div class="tog"     id="togCAGRSeries"><div class="dot"></div>CAGR (Series)</div>
-    <div class="tog-divider"></div>
-    <div class="tog"     id="togDataPivot"><div class="dot"></div>Data Pivot</div>
-    <div class="tog"     id="togRotate"><div class="dot"></div>Rotate 90°</div>
-  </div>
-
-  <div class="action-bar">
-    <button class="btn primary" id="renderBtn">Render chart</button>
-    <button class="btn" id="resetBtn">Reset</button>
-    <div style="flex:1;"></div>
-    <div id="chartStatusTag" class="status-tag">No data loaded</div>
-    <button class="btn copy-btn" id="copyBtn" disabled>
-      <svg id="copyIcon" width="13" height="13" viewBox="0 0 16 16" fill="none">
-        <rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-        <path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
-      <span id="copyLabel">Copy chart</span>
-    </button>
-  </div>
-
-  <div class="chart-area">
-    <div class="chart-title-row">
-      <div class="chart-title" id="displayTitle">Chart preview</div>
-    </div>
-    <div id="legendContainer" class="legend"></div>
-    <div id="noDataMsg" class="no-data">Load data and click "Render chart" to begin</div>
-    <div style="position:relative;width:100%;display:none;" id="canvasWrapper">
-      <canvas id="mainChart" role="img" aria-label="Chart visualization"></canvas>
+    <div style="margin-top:9px;display:none;" id="noHeaderSeriesWrap">
+      <div class="panel-label" style="margin-top:8px;">Series label</div>
+      <input type="text" id="noHeaderSeriesName" placeholder="e.g. Revenue, Units...">
+      <p class="hint">Used as series name when data has no header row.</p>
     </div>
   </div>
 </div>
+
+<div class="toggles-panel">
+  <span class="toggle-row-label">Options</span>
+  <div class="tog on"  id="togHeaders"><div class="dot"></div>With headers</div>
+  <div class="tog-divider"></div>
+  <div class="tog"     id="togLabels"><div class="dot"></div>Data labels</div>
+  <div class="tog on"  id="togGrid"><div class="dot"></div>Grid lines</div>
+  <div class="tog on"  id="togLegend"><div class="dot"></div>Legend</div>
+  <div class="tog"     id="togConnectors"><div class="dot"></div>Connectors</div>
+  <div class="tog"     id="togCAGR"><div class="dot"></div>CAGR</div>
+  <div class="tog"     id="togCAGRSeries"><div class="dot"></div>CAGR (Series)</div>
+  <div class="tog-divider"></div>
+  <div class="tog"     id="togDataPivot"><div class="dot"></div>Data Pivot</div>
+  <div class="tog"     id="togRotate"><div class="dot"></div>Rotate 90°</div>
 </div>
 
+<div class="action-bar">
+  <button class="btn primary" id="renderBtn">Render chart</button>
+  <button class="btn" id="resetBtn">Reset</button>
+  <div style="flex:1;"></div>
+  <div id="chartStatusTag" class="status-tag">No data loaded</div>
+  <button class="btn copy-btn" id="copyBtn" disabled>
+    <svg id="copyIcon" width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    <span id="copyLabel">Copy chart</span>
+  </button>
+</div>
+
+<div class="chart-area">
+  <div class="chart-title" id="displayTitle">Chart preview</div>
+  <div id="legendContainer" class="legend"></div>
+  <div id="noDataMsg" class="no-data">Load data and click "Render chart" to begin</div>
+  <div style="position:relative;width:100%;display:none;" id="canvasWrapper">
+    <canvas id="mainChart" role="img"></canvas>
+  </div>
+</div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -204,305 +153,434 @@
 Chart.unregister(ChartDataLabels);
 
 /* ── Palettes ── */
-const PALETTES={brand:{colors:['#051C2A','#163E93','#30A3DA','#A2AAAD','#D9D9D9'],border:null},mono:{colors:['#D9D9D9'],border:'#fff'},alt:{colors:['#00966C','#113E88','#F28E42','#4DC7B1'],border:null}};
-let activePalette='brand';
+const PALETTES={
+  blue:{colors:['#051C2A','#163E93','#30A3DA','#A2AAAD','#D9D9D9'],border:null},
+  mono:{colors:['#D9D9D9'],border:'#fff'},
+  alt: {colors:['#00966C','#113E88','#F28E42','#4DC7B1'],border:null}
+};
+const COMBI_LINE_COLOR='#1a1a1a';
+let activePalette='blue';
 function getColor(si){const p=PALETTES[activePalette];return p.colors[si%p.colors.length];}
 function getBorder(si){const p=PALETTES[activePalette];return p.border||p.colors[si%p.colors.length];}
 function isLightText(si){return['#051C2A','#163E93','#113E88','#00966C'].includes(getColor(si));}
-document.querySelectorAll('.palette-option').forEach(el=>{el.addEventListener('click',()=>{document.querySelectorAll('.palette-option').forEach(e=>e.classList.remove('active'));el.classList.add('active');activePalette=el.dataset.pid;if(PD&&CI)renderChart();});});
-
-const WF_POS='#163E93',WF_NEG='#C0392B',WF_TOTAL='#A2AAAD';
-let PD=null,CI=null;
-
-/* ── State ── */
-const S={headers:true,labels:false,grid:true,legend:true,connectors:false,cagr:false,cagrSeries:false,dataPivot:false,rotate:false};
-const TOGGLE_MAP=[['togHeaders','headers'],['togLabels','labels'],['togGrid','grid'],['togLegend','legend'],['togConnectors','connectors'],['togCAGR','cagr'],['togCAGRSeries','cagrSeries'],['togDataPivot','dataPivot'],['togRotate','rotate']];
-TOGGLE_MAP.forEach(([id,key])=>{
-  document.getElementById(id).addEventListener('click',()=>{
-    S[key]=!S[key];document.getElementById(id).classList.toggle('on',S[key]);
-    if(key==='headers'){document.getElementById('noHeaderSeriesWrap').style.display=S.headers?'none':'block';const raw=document.getElementById('pasteArea').value;if(raw.trim().length>5)loadData(raw);}
+document.querySelectorAll('.palette-option').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.palette-option').forEach(e=>e.classList.remove('active'));
+    el.classList.add('active');activePalette=el.dataset.pid;
     if(PD&&CI)renderChart();
   });
 });
 
-let toastT=null;
-function showToast(msg,err=false){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(err?' error':'');clearTimeout(toastT);toastT=setTimeout(()=>{el.className='toast';},3000);}
-function transposePD(pd){const{axisLabels,seriesNames,matrix}=pd;return{axisLabels:[...seriesNames],seriesNames:[...axisLabels],matrix:axisLabels.map((_,ri)=>seriesNames.map((_,si)=>matrix[si][ri])),rowTypes:seriesNames.map(()=>'')};}
-
-/* ── Layout constants ── */
+/* ── Constants ── */
+const WF_POS='#163E93',WF_NEG='#C0392B',WF_TOTAL='#A2AAAD';
 const LIFT=22,BUBBLE_LIFT=26,OVAL_RY=12,CAGR_TOP_PAD=80,CAGR_SERIES_RIGHT_PAD=160,MIN_SEGMENT_PX=8;
+let PD=null,CI=null;
+let _cagrActive=false,_isStacked=false,_cagrSeriesActive=false,_connectorActive=false,_isCombi=false;
+let _combiTotals=null;
 
-/* ── Plugin flags ── */
-let _cagrActive=false,_isStacked=false,_cagrSeriesActive=false,_connectorActive=false;
-
-/* ════════════════════════════════════════════════════════════
-   CAGR ARROW PLUGIN
-   Diagonal arrow from first→last bar with dynamic clearance.
-   Bubble always above the arrow line (−y direction).
-   ════════════════════════════════════════════════════════════ */
-const cagrPlugin={id:'cagrOverlay',afterDatasetsDraw(chart){
-  if(!S.cagr||!_cagrActive)return;
-  const isHoriz=chart.options.indexAxis==='y';
-  const visDs=chart.data.datasets.filter((_,i)=>chart.getDatasetMeta(i).visible!==false&&chart.data.datasets[i].label!=='_b');
-  const nCats=chart.data.labels.length;
-  if(nCats<2||visDs.length===0)return;
-  let startVal,endVal;
-  if(_isStacked){startVal=visDs.reduce((s,ds)=>s+(Number(ds.data[0])||0),0);endVal=visDs.reduce((s,ds)=>s+(Number(ds.data[nCats-1])||0),0);}
-  else{startVal=Number(visDs[0].data[0]);endVal=Number(visDs[0].data[nCats-1]);}
-  if(!startVal||startVal<=0||endVal<=0)return;
-  const cagrPct=(Math.pow(endVal/startVal,1/(nCats-1))-1)*100;
-  const label=(cagrPct>=0?'+':'')+cagrPct.toFixed(0)+'% p.a.';
-  const meta0=chart.getDatasetMeta(0);
-  const firstEl=meta0.data[0],lastEl=meta0.data[nCats-1];
-  const ctx=chart.ctx;
-  if(!isHoriz){
-    let x1=firstEl.x,x2=lastEl.x;
-    let y1=(_isStacked?chart.scales.y.getPixelForValue(startVal):firstEl.y)-LIFT;
-    let y2=(_isStacked?chart.scales.y.getPixelForValue(endVal):lastEl.y)-LIFT;
-    const totalX=x2-x1;
-    let extraLift=0;
-    for(let ci=1;ci<nCats-1;ci++){
-      const el=meta0.data[ci];
-      const barTopY=_isStacked?chart.scales.y.getPixelForValue(visDs.reduce((s,ds)=>s+(Number(ds.data[ci])||0),0)):el.y;
-      const t=totalX>0?(el.x-x1)/totalX:0;
-      const deficit=(y1+(y2-y1)*t)-(barTopY-LIFT);
-      if(deficit>extraLift)extraLift=deficit;
+/* ── Toggle state ── */
+const S={headers:true,labels:false,grid:true,legend:true,connectors:false,cagr:false,cagrSeries:false,dataPivot:false,rotate:false};
+[['togHeaders','headers'],['togLabels','labels'],['togGrid','grid'],['togLegend','legend'],
+ ['togConnectors','connectors'],['togCAGR','cagr'],['togCAGRSeries','cagrSeries'],
+ ['togDataPivot','dataPivot'],['togRotate','rotate']].forEach(([id,key])=>{
+  document.getElementById(id).addEventListener('click',()=>{
+    S[key]=!S[key];document.getElementById(id).classList.toggle('on',S[key]);
+    if(key==='headers'){
+      document.getElementById('noHeaderSeriesWrap').style.display=S.headers?'none':'block';
+      const raw=document.getElementById('pasteArea').value;
+      if(raw.trim().length>5)loadData(raw);
     }
-    y1-=extraLift;y2-=extraLift;
-    const bs=totalX/(nCats-1||1),extX=bs*0.4,slope=(y2-y1)/(totalX||1);
-    x2+=extX;y2+=extX*slope;
-    const AC='#1a1a1a';
-    ctx.save();ctx.setLineDash([]);
-    ctx.strokeStyle=AC;ctx.fillStyle=AC;ctx.lineWidth=2.8;ctx.lineCap='round';
+    if(PD&&CI)renderChart();
+  });
+});
+
+/* ── Toast ── */
+let toastT=null;
+function showToast(msg,err=false){
+  const el=document.getElementById('toast');el.textContent=msg;
+  el.className='toast show'+(err?' error':'');
+  clearTimeout(toastT);toastT=setTimeout(()=>{el.className='toast';},3000);
+}
+
+/* ── Number parser: strips %, $, £, €, thousands commas ── */
+function parseNum(s){
+  if(s===null||s===undefined)return 0;
+  const c=String(s).replace(/[%$£€\s]/g,'').replace(/,(?=\d)/g,'').trim();
+  const v=Number(c);return isNaN(v)?0:v;
+}
+
+/* ── Formatter ── */
+function fmt(v){
+  if(typeof v!=='number'||v===null)return'';
+  if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';
+  if(Math.abs(v)>=1e3)return(v/1e3).toFixed(1)+'K';
+  return v%1===0?String(v):v.toFixed(1);
+}
+
+/* ── Transpose ── */
+function transposePD(pd){
+  const{axisLabels,seriesNames,matrix}=pd;
+  return{axisLabels:[...seriesNames],seriesNames:[...axisLabels],
+    matrix:axisLabels.map((_,ri)=>seriesNames.map((_,si)=>matrix[si][ri])),
+    rowTypes:seriesNames.map(()=>'')};
+}
+
+/* ══════════════════════════════════════
+   PLUGINS
+   ══════════════════════════════════════ */
+
+/* CAGR arrow overlay */
+const cagrPlugin={id:'cagrOverlay',afterDatasetsDraw(chart){
+  if(!S.cagr||!_cagrActive||_isCombi)return;
+  const isHoriz=chart.options.indexAxis==='y';
+  const visDs=chart.data.datasets.filter((_,i)=>!chart.getDatasetMeta(i).hidden&&chart.data.datasets[i].label!=='_b');
+  const nCats=chart.data.labels.length;if(nCats<2||!visDs.length)return;
+  let sv,ev;
+  if(_isStacked){sv=visDs.reduce((s,d)=>s+(+d.data[0]||0),0);ev=visDs.reduce((s,d)=>s+(+d.data[nCats-1]||0),0);}
+  else{sv=+visDs[0].data[0];ev=+visDs[0].data[nCats-1];}
+  if(!sv||sv<=0||ev<=0)return;
+  const pct=(Math.pow(ev/sv,1/(nCats-1))-1)*100,label=(pct>=0?'+':'')+pct.toFixed(0)+'% p.a.';
+  const m0=chart.getDatasetMeta(0),f=m0.data[0],l=m0.data[nCats-1],ctx=chart.ctx;
+  if(!isHoriz){
+    let x1=f.x,x2=l.x,y1=(_isStacked?chart.scales.y.getPixelForValue(sv):f.y)-LIFT,y2=(_isStacked?chart.scales.y.getPixelForValue(ev):l.y)-LIFT;
+    const tX=x2-x1;let xL=0;
+    for(let i=1;i<nCats-1;i++){const el=m0.data[i],by=_isStacked?chart.scales.y.getPixelForValue(visDs.reduce((s,d)=>s+(+d.data[i]||0),0)):el.y;const t=tX>0?(el.x-x1)/tX:0,df=(y1+(y2-y1)*t)-(by-LIFT);if(df>xL)xL=df;}
+    y1-=xL;y2-=xL;
+    const bs=tX/(nCats-1||1),ex=bs*.4,sl=(y2-y1)/(tX||1);x2+=ex;y2+=ex*sl;
+    const AC='#e8e8e8';ctx.save();ctx.setLineDash([]);ctx.strokeStyle=AC;ctx.fillStyle=AC;ctx.lineWidth=2.4;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    const angle=Math.atan2(y2-y1,x2-x1),aLen=14,aAng=Math.PI/5.5;
-    ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-aLen*Math.cos(angle-aAng),y2-aLen*Math.sin(angle-aAng));ctx.lineTo(x2-aLen*Math.cos(angle+aAng),y2-aLen*Math.sin(angle+aAng));ctx.closePath();ctx.fill();
-    const T=0.38,lx=x1+(x2-x1)*T,ly=(y1+(y2-y1)*T)-BUBBLE_LIFT;
-    ctx.font='bold 12px sans-serif';const tw=ctx.measureText(label).width,rx=tw/2+13;
-    ctx.fillStyle='#fff';ctx.strokeStyle=AC;ctx.lineWidth=1.6;
-    ctx.beginPath();ctx.ellipse(lx,ly,rx,OVAL_RY,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#1a1a1a';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 12px sans-serif';ctx.fillText(label,lx,ly);
-    ctx.restore();
-  }else{
-    let y1=firstEl.y,y2=lastEl.y;
-    let x1=(_isStacked?chart.scales.x.getPixelForValue(startVal):firstEl.x)+LIFT;
-    let x2=(_isStacked?chart.scales.x.getPixelForValue(endVal):lastEl.x)+LIFT;
-    const rowSpacing=nCats>1?Math.abs(lastEl.y-firstEl.y)/(nCats-1):0;
-    y2=lastEl.y-rowSpacing*0.3;
-    const AC='#1a1a1a';
-    ctx.save();ctx.setLineDash([]);
-    ctx.strokeStyle=AC;ctx.fillStyle=AC;ctx.lineWidth=2.8;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    const angle=Math.atan2(y2-y1,x2-x1),aLen=14,aAng=Math.PI/5.5;
-    ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-aLen*Math.cos(angle-aAng),y2-aLen*Math.sin(angle-aAng));ctx.lineTo(x2-aLen*Math.cos(angle+aAng),y2-aLen*Math.sin(angle+aAng));ctx.closePath();ctx.fill();
-    const T=0.38,lx=x1+(x2-x1)*T,ly=(y1+(y2-y1)*T)-BUBBLE_LIFT;
-    ctx.font='bold 12px sans-serif';const tw=ctx.measureText(label).width,rx=tw/2+13;
-    ctx.fillStyle='#fff';ctx.strokeStyle=AC;ctx.lineWidth=1.6;
-    ctx.beginPath();ctx.ellipse(lx,ly,rx,OVAL_RY,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#1a1a1a';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 12px sans-serif';ctx.fillText(label,lx,ly);
-    ctx.restore();
+    const an=Math.atan2(y2-y1,x2-x1),aL=13,aA=Math.PI/5.5;
+    ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-aL*Math.cos(an-aA),y2-aL*Math.sin(an-aA));ctx.lineTo(x2-aL*Math.cos(an+aA),y2-aL*Math.sin(an+aA));ctx.closePath();ctx.fill();
+    const T=.38,lx=x1+(x2-x1)*T,ly=(y1+(y2-y1)*T)-BUBBLE_LIFT;
+    ctx.font='bold 11px sans-serif';const tw=ctx.measureText(label).width,rx=tw/2+12;
+    ctx.fillStyle='#1a1a1a';ctx.strokeStyle=AC;ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(lx,ly,rx,OVAL_RY,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#e8e8e8';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,lx,ly);ctx.restore();
   }
 }};
 Chart.register(cagrPlugin);
 
-/* ════════════════════════════════════════════════════════════
-   CAGR (SERIES) PLUGIN
-   Per-series CAGR labels on the right of the chart area.
-   Only for vertical stacked bars.
-
-   For each series:
-   • centre y  = (element.y + element.base) / 2
-   • CAGR      = (lastVal/firstVal)^(1/(n-1)) − 1
-   • Draws:  [colour swatch] [series name]    [+XX%]
-             at chart.chartArea.right + margin
-   • Skips segments thinner than MIN_SEGMENT_PX
-   ════════════════════════════════════════════════════════════ */
+/* CAGR per-series labels */
 const cagrSeriesPlugin={id:'cagrSeriesAnnotation',afterDatasetsDraw(chart){
-  if(!S.cagrSeries||!_cagrSeriesActive)return;
-  const nCats=chart.data.labels.length;
-  if(nCats<2)return;
-  const ctx=chart.ctx;
-  const rightX=chart.chartArea.right;
-  const endX=chart.width-6;
-  const swatchX=rightX+10;
-  const nameX=rightX+26;
+  if(!S.cagrSeries||!_cagrSeriesActive||_isCombi)return;
+  const nCats=chart.data.labels.length;if(nCats<2)return;
+  const ctx=chart.ctx,rX=chart.chartArea.right,eX=chart.width-6,sX=rX+10,nX=rX+26;
   ctx.save();
   chart.data.datasets.forEach((ds,si)=>{
-    if(ds.label==='_b')return;
-    const meta=chart.getDatasetMeta(si);
-    if(!meta.visible)return;
-    const firstVal=Number(ds.data[0])||0;
-    const lastVal=Number(ds.data[nCats-1])||0;
-    if(firstVal<=0||lastVal<=0)return;
-    const lastEl=meta.data[nCats-1];
-    if(!lastEl)return;
-    const segH=Math.abs(lastEl.base-lastEl.y);
-    if(segH<MIN_SEGMENT_PX)return;
-    const centerY=(lastEl.y+lastEl.base)/2;
-    const cagrPct=(Math.pow(lastVal/firstVal,1/(nCats-1))-1)*100;
-    const cagrStr=(cagrPct>=0?'+':'')+cagrPct.toFixed(0)+'%';
-    const rawName=ds.label||('Series '+(si+1));
-    const name=rawName.length>13?rawName.slice(0,12)+'\u2026':rawName;
-    /* colour swatch */
-    const barColor=Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.backgroundColor;
-    ctx.fillStyle=barColor||'#999';
-    ctx.fillRect(swatchX,centerY-5,10,10);
-    /* series name */
-    ctx.font='12px sans-serif';
-    ctx.fillStyle='#444';
-    ctx.textAlign='left';
-    ctx.textBaseline='middle';
-    ctx.fillText(name,nameX,centerY);
-    /* CAGR value */
-    ctx.font='bold 12px sans-serif';
-    ctx.fillStyle='#1a1a1a';
-    ctx.textAlign='right';
-    ctx.fillText(cagrStr,endX,centerY);
+    if(ds.label==='_b'||ds.type==='line')return;
+    const meta=chart.getDatasetMeta(si);if(meta.hidden)return;
+    const fv=+ds.data[0]||0,lv=+ds.data[nCats-1]||0;if(fv<=0||lv<=0)return;
+    const le=meta.data[nCats-1];if(!le)return;
+    const sh=Math.abs(le.base-le.y);if(sh<MIN_SEGMENT_PX)return;
+    const cy=(le.y+le.base)/2,pct=(Math.pow(lv/fv,1/(nCats-1))-1)*100;
+    const cs=(pct>=0?'+':'')+pct.toFixed(0)+'%';
+    const nm=(ds.label||'').length>13?ds.label.slice(0,12)+'…':ds.label||('S'+(si+1));
+    const bc=Array.isArray(ds.backgroundColor)?ds.backgroundColor[0]:ds.backgroundColor;
+    ctx.fillStyle=bc||'#999';ctx.fillRect(sX,cy-5,10,10);
+    ctx.font='11px sans-serif';ctx.fillStyle='#aaa';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(nm,nX,cy);
+    ctx.font='bold 11px sans-serif';ctx.fillStyle='#e8e8e8';ctx.textAlign='right';ctx.fillText(cs,eX,cy);
   });
   ctx.restore();
 }};
 Chart.register(cagrSeriesPlugin);
 
-/* ── Connectors ── */
+/* Bar connectors */
 const connectorsPlugin={id:'barConnectors',afterDatasetsDraw(chart){
   if(!S.connectors||!_connectorActive)return;
   const isHoriz=chart.options.indexAxis==='y';if(isHoriz&&!_isStacked)return;
   const ctx=chart.ctx,nS=chart.data.datasets.length,nC=chart.data.labels.length;
-  ctx.save();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(80,80,80,0.4)';ctx.lineWidth=0.9;
-  for(let si=0;si<nS;si++){const meta=chart.getDatasetMeta(si);if(!meta.visible)continue;for(let ci=0;ci<nC-1;ci++){const bA=meta.data[ci],bB=meta.data[ci+1];if(!bA||!bB)continue;ctx.beginPath();if(isHoriz){ctx.moveTo(bA.x,bA.y+bA.height/2);ctx.lineTo(bB.x,bB.y-bB.height/2);}else{ctx.moveTo(bA.x+bA.width/2,bA.y);ctx.lineTo(bB.x-bB.width/2,bB.y);}ctx.stroke();}}
-  ctx.restore();
+  ctx.save();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(180,180,180,0.3)';ctx.lineWidth=.9;
+  for(let si=0;si<nS;si++){
+    const ds=chart.data.datasets[si];if(ds.type==='line'||ds.label==='_b')continue;
+    const m=chart.getDatasetMeta(si);if(m.hidden)continue;
+    for(let ci=0;ci<nC-1;ci++){const a=m.data[ci],b=m.data[ci+1];if(!a||!b)continue;
+      ctx.beginPath();if(isHoriz){ctx.moveTo(a.x,a.y+a.height/2);ctx.lineTo(b.x,b.y-b.height/2);}
+      else{ctx.moveTo(a.x+a.width/2,a.y);ctx.lineTo(b.x-b.width/2,b.y);}ctx.stroke();}
+  }ctx.restore();
 }};
 Chart.register(connectorsPlugin);
 
-/* ── Waterfall connectors ── */
-const wfPlugin={id:'wfC',_d:null,afterDraw(c){if(!this._d)return;const{floatBase,barVals}=this._d,ctx=c.ctx,m=c.getDatasetMeta(1),n=m.data.length;ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(120,120,120,0.45)';ctx.lineWidth=1;for(let i=0;i<n-1;i++){const b=m.data[i],nb=m.data[i+1];if(S.rotate){const rx=c.scales.x.getPixelForValue(floatBase[i]+barVals[i]);ctx.beginPath();ctx.moveTo(rx,b.y-b.height/2);ctx.lineTo(rx,nb.y+nb.height/2);ctx.stroke();}else{const ty=c.scales.y.getPixelForValue(floatBase[i]+barVals[i]);ctx.beginPath();ctx.moveTo(b.x+b.width/2,ty);ctx.lineTo(nb.x-nb.width/2,ty);ctx.stroke();}}ctx.restore();}};
-Chart.register(wfPlugin);
-const makeBg={beforeDraw(c){c.ctx.clearRect(0,0,c.width,c.height);}};
+/* Combi stack total labels */
+const combiStackTotalPlugin={id:'combiStackTotal',afterDatasetsDraw(chart){
+  if(!S.labels||!_combiTotals||!_isCombi)return;
+  const ctx=chart.ctx,nC=chart.data.labels.length;
+  const bDs=chart.data.datasets.filter(d=>d.yAxisID==='y'&&d.type!=='line');if(!bDs.length)return;
+  ctx.save();ctx.font='12px sans-serif';ctx.fillStyle='#ccc';ctx.textAlign='center';ctx.textBaseline='bottom';
+  for(let ci=0;ci<nC;ci++){
+    const t=_combiTotals[ci];if(!t&&t!==0)continue;
+    const y=chart.scales.y.getPixelForValue(t);
+    const fi=chart.data.datasets.indexOf(bDs[0]);
+    const el=chart.getDatasetMeta(fi).data[ci];if(!el)continue;
+    ctx.fillText(fmt(t),el.x,y-4);
+  }ctx.restore();
+}};
+Chart.register(combiStackTotalPlugin);
 
-/* ── Parser ── */
+/* ══════════════════════════════════════
+   COMBI LINE ON TOP
+   Chart.js 4 mixed charts always paint bar rectangles after
+   line paths regardless of `order`. This afterDraw plugin
+   repaints every line-type dataset after the full chart render,
+   clipped to the chart area, guaranteeing it sits on top.
+   ══════════════════════════════════════ */
+const combiLineOnTopPlugin={id:'combiLineOnTop',afterDraw(chart){
+  if(!_isCombi)return;
+  chart.data.datasets.forEach((ds,i)=>{
+    if(ds.type!=='line')return;
+    const meta=chart.getDatasetMeta(i);if(!meta||meta.hidden)return;
+    const ctx=chart.ctx;
+    ctx.save();
+    const{top,right,bottom,left}=chart.chartArea;
+    ctx.beginPath();ctx.rect(left,top,right-left,bottom-top);ctx.clip();
+    if(meta.dataset&&meta.dataset.draw)meta.dataset.draw(ctx);
+    meta.data.forEach(el=>{if(el&&el.draw)el.draw(ctx);});
+    ctx.restore();
+  });
+}};
+Chart.register(combiLineOnTopPlugin);
+
+/* Waterfall connectors */
+const wfPlugin={id:'wfC',_d:null,afterDraw(c){
+  if(!this._d)return;
+  const{floatBase,barVals}=this._d,ctx=c.ctx,m=c.getDatasetMeta(1),n=m.data.length;
+  ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(180,180,180,0.35)';ctx.lineWidth=1;
+  for(let i=0;i<n-1;i++){
+    const b=m.data[i],nb=m.data[i+1],ty=c.scales.y.getPixelForValue(floatBase[i]+barVals[i]);
+    ctx.beginPath();ctx.moveTo(b.x+b.width/2,ty);ctx.lineTo(nb.x-nb.width/2,ty);ctx.stroke();
+  }ctx.restore();
+}};
+Chart.register(wfPlugin);
+
+/* White background for PNG export */
+const makeBg={id:'makeBg',beforeDraw(c){
+  const ctx=c.ctx;ctx.save();ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,c.width,c.height);ctx.restore();
+}};
+
+/* ══════════════════════════════════════
+   DATA PARSER
+   ══════════════════════════════════════ */
 function parseData(raw){
   const text=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-  if(!lines.length)return null;
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);if(!lines.length)return null;
   const sep=lines[0].indexOf('\t')>=0?'\t':',';
   const grid=lines.map(l=>l.split(sep).map(c=>c.trim().replace(/^["']|["']$/g,'')));
-  const isNum=s=>s!==''&&!isNaN(Number(s));
+  const isNumStr=s=>{const c=String(s).replace(/[%$£€\s,]/g,'').trim();return c!==''&&!isNaN(Number(c));};
   if(S.headers){
     if(grid.length<2)return null;
-    const hdr=grid[0],body=grid.slice(1),hdr0IsWord=!isNum(hdr[0]);
-    let axisLabels,seriesNames,seriesStart,rowTypes;
-    if(hdr0IsWord){axisLabels=body.map(r=>r[0]);seriesNames=hdr.slice(1);seriesStart=1;rowTypes=body.map(r=>(r[hdr.length]||'').toLowerCase().trim());}
-    else{axisLabels=body.map((_,i)=>`Row ${i+1}`);seriesNames=hdr;seriesStart=0;rowTypes=body.map(()=>'');}
+    const hdr=grid[0],body=grid.slice(1),hw=!isNumStr(hdr[0]);
+    let axisLabels,seriesNames,ss,rowTypes;
+    if(hw){axisLabels=body.map(r=>r[0]);seriesNames=hdr.slice(1);ss=1;rowTypes=body.map(r=>(r[hdr.length]||'').toLowerCase().trim());}
+    else{axisLabels=body.map((_,i)=>'Row '+(i+1));seriesNames=hdr;ss=0;rowTypes=body.map(()=>'');}
     if(!seriesNames.length)return null;
-    const matrix=seriesNames.map((_,si)=>body.map(r=>{const v=Number(r[si+seriesStart]);return isNaN(v)?0:v;}));
-    return{axisLabels,seriesNames,matrix,rowTypes};
+    const matrix=seriesNames.map((_,si)=>body.map(r=>parseNum(r[si+ss])));
+    const last=body[body.length-1]||[];
+    return{axisLabels,seriesNames,matrix,rowTypes,rawLastRow:seriesNames.map((_,si)=>last[si+ss]||'(empty)')};
   }else{
-    const seriesLabel=document.getElementById('noHeaderSeriesName').value.trim()||'Value';
-    const body=grid,nCols=body[0].length,col0IsText=body.some(r=>!isNum(r[0]));
-    let axisLabels,seriesNames,seriesStart;
-    if(col0IsText){axisLabels=body.map(r=>r[0]);seriesNames=nCols>2?Array.from({length:nCols-1},(_,i)=>`Series ${i+1}`):[seriesLabel];seriesStart=1;}
-    else{axisLabels=body.map((_,i)=>`Row ${i+1}`);seriesNames=Array.from({length:nCols},(_,i)=>i===0?seriesLabel:`Series ${i+1}`);seriesStart=0;}
-    const rowTypes=body.map(r=>(r[seriesNames.length+seriesStart]||'').toLowerCase().trim());
-    const matrix=seriesNames.map((_,si)=>body.map(r=>{const v=Number(r[si+seriesStart]);return isNaN(v)?0:v;}));
-    return{axisLabels,seriesNames,matrix,rowTypes};
+    const sl=document.getElementById('noHeaderSeriesName').value.trim()||'Value';
+    const body=grid,nc=body[0].length,c0t=body.some(r=>!isNumStr(r[0]));
+    let axisLabels,seriesNames,ss;
+    if(c0t){axisLabels=body.map(r=>r[0]);seriesNames=nc>2?Array.from({length:nc-1},(_,i)=>'Series '+(i+1)):[sl];ss=1;}
+    else{axisLabels=body.map((_,i)=>'Row '+(i+1));seriesNames=Array.from({length:nc},(_,i)=>i===0?sl:'Series '+(i+1));ss=0;}
+    const rowTypes=body.map(r=>(r[seriesNames.length+ss]||'').toLowerCase().trim());
+    const matrix=seriesNames.map((_,si)=>body.map(r=>parseNum(r[si+ss])));
+    const last=body[body.length-1]||[];
+    return{axisLabels,seriesNames,matrix,rowTypes,rawLastRow:seriesNames.map((_,si)=>last[si+ss]||'(empty)')};
   }
 }
 
-/* ── Chart data ── */
+/* ══════════════════════════════════════
+   y2 SCALE — clean bounds from line data
+   ══════════════════════════════════════ */
+function makeY2Scale(lineData){
+  const vals=(lineData||[]).filter(v=>v!==null&&typeof v==='number'&&isFinite(v));
+  if(!vals.length)return{type:'linear',position:'right',display:false};
+  const lo=Math.min(...vals),hi=Math.max(...vals);
+  if(hi===0&&lo===0)return{type:'linear',position:'right',min:0,max:10,grid:{display:false},ticks:{color:'#666',font:{size:11}}};
+  const rMax=hi+(hi-lo||hi)*.35,rMin=Math.max(0,lo-(hi-lo||hi)*.25);
+  const span=rMax-rMin||rMax||1,rs=span/5,mag=Math.pow(10,Math.floor(Math.log10(rs)));
+  const nr=rs/mag,ns=nr<=1?mag:nr<=2?2*mag:nr<=5?5*mag:10*mag;
+  return{type:'linear',position:'right',min:Math.floor(rMin/ns)*ns,max:Math.ceil(rMax/ns)*ns,
+    grid:{display:false},ticks:{color:'#666',font:{size:11},stepSize:ns}};
+}
+
+/* ══════════════════════════════════════
+   COMBI DATA BUILDER
+   Last ROW = line (secondary y2 axis).
+   Both pivot modes always show the line.
+   ══════════════════════════════════════ */
+function buildCombiData(pd,isPivoted){
+  const{axisLabels,seriesNames,matrix}=pd;
+  const nC=axisLabels.length,nS=seriesNames.length;
+  if(nC<2){showToast('Combi needs ≥ 2 data rows',true);return null;}
+  const lineName=axisLabels[nC-1];
+  const rawLD=seriesNames.map((_,si)=>matrix[si][nC-1]);
+  const barDL=si=>S.labels?{display:true,anchor:'center',align:'center',offset:0,clip:false,
+    color:isLightText(si)?'#fff':'#222',font:{size:11,weight:500},formatter:fmt}:{display:false};
+  const makeLineDs=(name,data)=>({
+    type:'line',label:name,data,backgroundColor:'transparent',
+    borderColor:COMBI_LINE_COLOR,borderWidth:2,
+    pointStyle:'rect',pointRadius:2,pointHoverRadius:4,
+    pointBackgroundColor:COMBI_LINE_COLOR,pointBorderColor:COMBI_LINE_COLOR,
+    tension:.2,yAxisID:'y2',datalabels:{display:false}
+  });
+  if(!isPivoted){
+    const labels=axisLabels.slice(0,nC-1),nX=labels.length;
+    const ld=Array.from({length:nX},(_,i)=>(i<rawLD.length&&rawLD[i]!==0)?rawLD[i]:null);
+    const used=ld.every(v=>v===null)?labels.map((_,ri)=>seriesNames.reduce((s,_,si)=>s+(+matrix[si][ri]||0),0)):ld;
+    const datasets=[
+      ...seriesNames.map((name,si)=>({type:'bar',label:name,data:labels.map((_,ri)=>matrix[si][ri]),
+        backgroundColor:getColor(si),borderColor:getBorder(si),borderWidth:activePalette==='mono'?2:1,
+        yAxisID:'y',stack:'combi',datalabels:barDL(si)})),
+      makeLineDs(lineName,used)
+    ];
+    _combiTotals=labels.map((_,ri)=>seriesNames.reduce((s,_,si)=>s+(+matrix[si][ri]||0),0));
+    return{labels,datasets,lineName,lineData:used,hasLine:true};
+  }else{
+    const labels=[...seriesNames];
+    const bDs=Array.from({length:nC-1},(_,ri)=>({type:'bar',label:axisLabels[ri],
+      data:seriesNames.map((_,si)=>matrix[si][ri]),
+      backgroundColor:getColor(ri),borderColor:getBorder(ri),borderWidth:activePalette==='mono'?2:1,
+      yAxisID:'y',stack:'combi',datalabels:barDL(ri)}));
+    _combiTotals=seriesNames.map((_,si)=>Array.from({length:nC-1},(_,ri)=>+matrix[si][ri]||0).reduce((a,b)=>a+b,0));
+    return{labels,datasets:[...bDs,makeLineDs(lineName,[...rawLD])],lineName,lineData:rawLD,hasLine:true};
+  }
+}
+
+/* ── Standard chart data ── */
 function buildCJSData(pd,ct){
-  const{axisLabels,seriesNames,matrix}=pd,isPie=ct==='pie'||ct==='doughnut',isLine=ct.startsWith('line');
-  if(isPie){const bg=axisLabels.map((_,i)=>getColor(i)),bdr=axisLabels.map((_,i)=>getBorder(i));return{labels:[...axisLabels],datasets:[{data:[...matrix[0]],backgroundColor:bg,borderColor:bdr,borderWidth:2}]};}
-  return{labels:[...axisLabels],datasets:seriesNames.map((name,si)=>({label:name,data:[...matrix[si]],backgroundColor:getColor(si),borderColor:getBorder(si),borderWidth:activePalette==='mono'?2:isLine?2:1,fill:ct==='line-area',tension:0.3,pointRadius:3}))};
+  const{axisLabels,seriesNames,matrix}=pd;
+  const isPie=ct==='pie'||ct==='doughnut',isLine=ct.startsWith('line'),isSt=ct==='bar-stacked';
+  if(isPie){return{labels:[...axisLabels],datasets:[{data:[...matrix[0]],backgroundColor:axisLabels.map((_,i)=>getColor(i)),borderColor:axisLabels.map((_,i)=>getBorder(i)),borderWidth:2}]};}
+  return{labels:[...axisLabels],datasets:seriesNames.map((name,si)=>({label:name,data:[...matrix[si]],backgroundColor:getColor(si),borderColor:getBorder(si),borderWidth:activePalette==='mono'?2:isLine?2:1,...(isSt?{stack:'main'}:{}),fill:ct==='line-area',tension:.3,pointRadius:3}))};
 }
-
-function buildScales(isStacked,useHoriz){
-  if(useHoriz)return{y:{type:'category',stacked:isStacked,grid:{display:false},ticks:{font:{size:11},autoSkip:false}},x:{type:'linear',stacked:isStacked,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11}}}};
-  return{x:{type:'category',stacked:isStacked,grid:{display:false},ticks:{font:{size:11},maxRotation:35,autoSkip:false}},y:{type:'linear',stacked:isStacked,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11}}}};
+function buildScales(isSt,horiz){
+  const gc={display:S.grid,color:'rgba(255,255,255,0.06)'};
+  const tc={color:'#666',font:{size:11}};
+  if(horiz)return{y:{type:'category',stacked:isSt,grid:{display:false},ticks:{...tc,autoSkip:false}},x:{type:'linear',stacked:isSt,grid:gc,ticks:tc}};
+  return{x:{type:'category',stacked:isSt,grid:{display:false},ticks:{...tc,maxRotation:35,autoSkip:false}},y:{type:'linear',stacked:isSt,grid:gc,ticks:tc}};
 }
-
-function fmt(v){if(typeof v!=='number')return'';if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1e3)return(v/1e3).toFixed(1)+'K';return v%1===0?String(v):v.toFixed(1);}
-
-function makeDLConfig(isStacked,isPie){
+function makeDLConfig(isSt,isPie){
   if(!S.labels)return{display:false};
-  if(isPie)return{display:true,anchor:'center',align:'center',color:(ctx)=>['#051C2A','#163E93','#113E88','#00966C'].includes(ctx.dataset.backgroundColor[ctx.dataIndex])?'#fff':'#222',font:{size:11,weight:500},formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]+'\n'+fmt(v)};
-  if(isStacked)return{display:true,anchor:'center',align:'center',offset:0,clip:false,color:(ctx)=>isLightText(ctx.datasetIndex)?'#fff':'#222',font:{size:11,weight:500},formatter:fmt};
-  return{display:true,anchor:'end',align:'end',offset:4,clip:false,color:'#555',font:{size:11,weight:500},formatter:fmt};
+  if(isPie)return{display:true,anchor:'center',align:'center',color:ctx=>isLightText(ctx.datasetIndex)?'#fff':'#222',font:{size:11,weight:500},formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]+'\n'+fmt(v)};
+  if(isSt)return{display:true,anchor:'center',align:'center',offset:0,clip:false,color:ctx=>isLightText(ctx.datasetIndex)?'#fff':'#222',font:{size:11,weight:500},formatter:fmt};
+  return{display:true,anchor:'end',align:'end',offset:4,clip:false,color:'#aaa',font:{size:11,weight:500},formatter:fmt};
 }
-
-function getPadding(isStacked,isPie,useHoriz){
-  const cagrTop=(S.cagr&&_cagrActive&&!isPie&&!useHoriz)?CAGR_TOP_PAD:0;
-  const cagrRight=(S.cagrSeries&&_cagrSeriesActive)?CAGR_SERIES_RIGHT_PAD:0;
+function getPadding(isSt,isPie,horiz,isCombi){
+  const cagrTop=(S.cagr&&_cagrActive&&!isPie&&!horiz&&!isCombi)?CAGR_TOP_PAD:0;
+  const cagrR=(S.cagrSeries&&_cagrSeriesActive&&!isCombi)?CAGR_SERIES_RIGHT_PAD:0;
+  const sTop=(S.labels&&(isSt||isCombi))?24:0;
   if(isPie)return{top:8,right:16,bottom:4,left:4};
-  if(useHoriz)return{top:8,right:52,bottom:4,left:4};
-  if(isStacked||!S.labels)return{top:8+cagrTop,right:16+cagrRight,bottom:4,left:4};
-  return{top:32+cagrTop,right:16+cagrRight,bottom:4,left:4};
+  if(horiz)return{top:8,right:52,bottom:4,left:4};
+  return{top:8+cagrTop+sTop,right:16+cagrR,bottom:4,left:4};
 }
-
 function buildWFData(pd){
   const{axisLabels,seriesNames,matrix,rowTypes}=pd;
-  const isWide=matrix[0].length===1&&seriesNames.some(n=>isNaN(Number(n)));
-  let pairs=isWide?seriesNames.map((lbl,i)=>({lbl,v:matrix[i][0],isT:false})):axisLabels.map((lbl,i)=>({lbl,v:matrix[0][i],isT:rowTypes[i]==='total'||rowTypes[i]==='subtotal'}));
-  if(!(pairs.length&&pairs[pairs.length-1].isT))pairs.push({lbl:'Total',v:pairs.reduce((s,p)=>p.isT?p.v:s+p.v,0),isT:true});
+  const wide=matrix[0].length===1&&seriesNames.some(n=>isNaN(Number(n)));
+  let pairs=wide?seriesNames.map((l,i)=>({lbl:l,v:matrix[i][0],isT:false})):axisLabels.map((l,i)=>({lbl:l,v:matrix[0][i],isT:rowTypes[i]==='total'||rowTypes[i]==='subtotal'}));
+  if(!pairs[pairs.length-1]?.isT)pairs.push({lbl:'Total',v:pairs.reduce((s,p)=>p.isT?p.v:s+p.v,0),isT:true});
   const n=pairs.length,labels=pairs.map(p=>p.lbl),rawVals=pairs.map(p=>p.v);
-  const floatBase=new Array(n).fill(0),barVals=new Array(n).fill(0),colors=new Array(n).fill(WF_POS),isT=pairs.map(p=>p.isT);
-  let run=0;
-  for(let i=0;i<n;i++){const v=rawVals[i];if(isT[i]){floatBase[i]=0;barVals[i]=v;colors[i]=WF_TOTAL;run=v;}else{floatBase[i]=v>=0?run:run+v;barVals[i]=Math.abs(v);colors[i]=v>=0?WF_POS:WF_NEG;run+=v;}}
-  return{labels,floatBase,barVals,colors,rawVals,isT};
+  const fb=new Array(n).fill(0),bv=new Array(n).fill(0),col=new Array(n).fill(WF_POS),isT=pairs.map(p=>p.isT);
+  let run=0;for(let i=0;i<n;i++){const v=rawVals[i];if(isT[i]){fb[i]=0;bv[i]=v;col[i]=WF_TOTAL;run=v;}else{fb[i]=v>=0?run:run+v;bv[i]=Math.abs(v);col[i]=v>=0?WF_POS:WF_NEG;run+=v;}}
+  return{labels,floatBase:fb,barVals:bv,colors:col,rawVals,isT};
 }
 
-/* ── Render ── */
+/* ══════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════ */
 function renderChart(){
   if(!PD){alert('Please load data first.');return;}
   const ct=document.getElementById('chartType').value;
   const title=document.getElementById('chartTitleInput').value||'Chart';
-  const isPie=ct==='pie'||ct==='doughnut',isLine=ct.startsWith('line'),useHoriz=S.rotate&&!isPie;
-  const pd=(S.dataPivot&&!isPie&&ct!=='waterfall')?transposePD(PD):PD;
+  const isPie=ct==='pie'||ct==='doughnut';
+  _isCombi=ct==='combi';
+  const isLine=ct.startsWith('line');
+  const horiz=S.rotate&&!isPie&&!_isCombi;
+  const pd=(S.dataPivot&&!isPie&&!_isCombi&&ct!=='waterfall')?transposePD(PD):PD;
   _isStacked=ct==='bar-stacked';
-  _cagrActive=!isPie&&ct!=='waterfall';
-  _cagrSeriesActive=_isStacked&&!useHoriz;
+  _cagrActive=!isPie&&ct!=='waterfall'&&!_isCombi;
+  _cagrSeriesActive=_isStacked&&!horiz&&!_isCombi;
+  _combiTotals=null;
   document.getElementById('displayTitle').textContent=title;
   document.getElementById('noDataMsg').style.display='none';
-  const wrapper=document.getElementById('canvasWrapper');wrapper.style.display='block';
+  const wrap=document.getElementById('canvasWrapper');wrap.style.display='block';
   if(CI){CI.destroy();CI=null;}
 
+  const scaleColor='#555',axTick={color:scaleColor,font:{size:11}};
+  const gridColor='rgba(255,255,255,0.06)';
+
+  /* ── Waterfall ── */
   if(ct==='waterfall'){
     _connectorActive=false;_cagrActive=false;_cagrSeriesActive=false;
-    const wf=buildWFData(PD);wfPlugin._d=wf;
-    wrapper.style.height=(useHoriz?Math.max(280,wf.labels.length*44+80):400)+'px';
-    const wfLbl=S.labels?{display:true,anchor:'end',align:useHoriz?'right':'top',offset:4,clip:false,color:ctx=>wf.isT[ctx.dataIndex]?'#666':(wf.rawVals[ctx.dataIndex]>=0?WF_POS:WF_NEG),font:{size:11,weight:500},formatter:(_,ctx)=>{const r=wf.rawVals[ctx.dataIndex],t=wf.isT[ctx.dataIndex];return t?fmt(r):(r>=0?'+':'')+fmt(r);}}:{display:false};
-    const wfSc=useHoriz?{x:{type:'linear',stacked:true,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11},callback:v=>v.toLocaleString()}},y:{type:'category',stacked:true,grid:{display:false},ticks:{font:{size:11},autoSkip:false}}}:{x:{type:'category',stacked:true,grid:{display:false},ticks:{font:{size:11},maxRotation:0,autoSkip:false}},y:{type:'linear',stacked:true,grid:{display:S.grid,color:'rgba(0,0,0,0.06)'},ticks:{font:{size:11},callback:v=>v.toLocaleString()}}};
-    CI=new Chart(document.getElementById('mainChart'),{type:'bar',data:{labels:wf.labels,datasets:[{label:'_b',data:wf.floatBase,backgroundColor:'transparent',borderColor:'transparent',borderWidth:0,barPercentage:0.6,categoryPercentage:0.7,datalabels:{display:false}},{label:'V',data:wf.barVals,backgroundColor:wf.colors,borderColor:wf.colors,borderWidth:1,barPercentage:0.6,categoryPercentage:0.7,datalabels:wfLbl}]},options:{indexAxis:useHoriz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return null;const r=wf.rawVals[ctx.dataIndex],t=wf.isT[ctx.dataIndex];return' '+(t?'Total: '+r.toLocaleString():(r>=0?'+':'')+r.toLocaleString());}}},datalabels:{display:false}},scales:wfSc,layout:{padding:useHoriz?{top:8,right:S.labels?52:16,bottom:4,left:8}:{top:S.labels?32:8,right:24,bottom:4,left:8}}},plugins:[makeBg,ChartDataLabels]});
+    const wf=buildWFData(PD);wfPlugin._d=wf;wrap.style.height='400px';
+    const wfDL=S.labels?{display:true,anchor:'end',align:'top',offset:4,clip:false,color:ctx=>wf.isT[ctx.dataIndex]?'#888':(wf.rawVals[ctx.dataIndex]>=0?'#70A3E8':'#e87070'),font:{size:11,weight:500},formatter:(_,ctx)=>{const r=wf.rawVals[ctx.dataIndex],t=wf.isT[ctx.dataIndex];return t?fmt(r):(r>=0?'+':'')+fmt(r);}}:{display:false};
+    CI=new Chart(document.getElementById('mainChart'),{type:'bar',data:{labels:wf.labels,datasets:[{label:'_b',data:wf.floatBase,backgroundColor:'transparent',borderColor:'transparent',borderWidth:0,barPercentage:.6,categoryPercentage:.7,datalabels:{display:false}},{label:'V',data:wf.barVals,backgroundColor:wf.colors,borderColor:wf.colors,borderWidth:1,barPercentage:.6,categoryPercentage:.7,datalabels:wfDL}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return null;const r=wf.rawVals[ctx.dataIndex],t=wf.isT[ctx.dataIndex];return' '+(t?'Total: '+r.toLocaleString():(r>=0?'+':'')+r.toLocaleString());}}},datalabels:{display:false}},scales:{x:{type:'category',stacked:true,grid:{display:false},ticks:{...axTick,maxRotation:0,autoSkip:false}},y:{type:'linear',stacked:true,grid:{display:S.grid,color:gridColor},ticks:axTick}},layout:{padding:{top:S.labels?32:8,right:24,bottom:4,left:8}}},plugins:[makeBg,ChartDataLabels]});
     document.getElementById('legendContainer').innerHTML=S.legend?[{l:'Increase',c:WF_POS},{l:'Decrease',c:WF_NEG},{l:'Total',c:WF_TOTAL}].map(x=>`<div class="legend-item"><div class="legend-swatch" style="background:${x.c}"></div>${x.l}</div>`).join(''):'';
     document.getElementById('copyBtn').disabled=false;return;
   }
 
-  _connectorActive=!isPie&&!isLine;
-  const cjsData=buildCJSData(pd,ct),nRows=pd.axisLabels.length,nSeries=pd.seriesNames.length;
-  wrapper.style.height=isPie?'320px':useHoriz?Math.max(280,nRows*(nSeries>1?nSeries*18+24:34)+80)+'px':'300px';
+  /* ── Combi ── */
+  if(_isCombi){
+    _connectorActive=true;wfPlugin._d=null;
+    const cr=buildCombiData(PD,S.dataPivot);if(!cr)return;
+    wrap.style.height='340px';
+    CI=new Chart(document.getElementById('mainChart'),{type:'bar',data:{labels:cr.labels,datasets:cr.datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:true},datalabels:{display:false}},
+        scales:{
+          x:{type:'category',grid:{display:false},ticks:{...axTick,maxRotation:35,autoSkip:false}},
+          y:{type:'linear',stacked:true,position:'left',grid:{display:S.grid,color:gridColor},ticks:axTick},
+          y2:makeY2Scale(cr.lineData)
+        },
+        layout:{padding:getPadding(true,false,false,true)}},
+      plugins:[makeBg,ChartDataLabels]});
+    if(S.legend){
+      const bDs=cr.datasets.filter(d=>d.type==='bar');
+      const items=bDs.map(d=>`<div class="legend-item"><div class="legend-swatch" style="background:${Array.isArray(d.backgroundColor)?d.backgroundColor[0]:d.backgroundColor}"></div>${d.label}</div>`);
+      items.push(`<div class="legend-item"><svg width="8" height="8" style="flex-shrink:0;margin:2px 2px 0 0"><rect x="0" y="0" width="8" height="8" fill="${COMBI_LINE_COLOR}"/></svg>&nbsp;${cr.lineName}</div>`);
+      document.getElementById('legendContainer').innerHTML=items.join('');
+    }else document.getElementById('legendContainer').innerHTML='';
+    document.getElementById('copyBtn').disabled=false;return;
+  }
+
+  /* ── Standard charts ── */
+  wfPlugin._d=null;_connectorActive=!isPie&&!isLine;
+  const cjsD=buildCJSData(pd,ct),nR=pd.axisLabels.length,nSr=pd.seriesNames.length;
+  wrap.style.height=isPie?'320px':horiz?Math.max(280,nR*(nSr>1?nSr*18+24:34)+80)+'px':'300px';
   const type=isPie?ct:isLine?'line':'bar';
-  const scales=isPie?{}:buildScales(_isStacked,useHoriz);
-  const padding=getPadding(_isStacked,isPie,useHoriz);
+  const scales=isPie?{}:buildScales(_isStacked,horiz);
+  if(!isPie){Object.values(scales).forEach(sc=>{if(sc.ticks)sc.ticks={...sc.ticks,...axTick};else sc.ticks=axTick;if(sc.grid&&sc.grid.display)sc.grid.color=gridColor;});}
+  const padding=getPadding(_isStacked,isPie,horiz,false);
   const dlCfg=makeDLConfig(_isStacked,isPie);
-  if(isPie){cjsData.datasets[0].datalabels=dlCfg;}else{cjsData.datasets.forEach(ds=>{ds.datalabels=dlCfg;});}
-  CI=new Chart(document.getElementById('mainChart'),{type,data:cjsData,options:{indexAxis:useHoriz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true},datalabels:{display:false}},scales,layout:{padding}},plugins:[makeBg,ChartDataLabels]});
+  if(isPie)cjsD.datasets[0].datalabels=dlCfg;
+  else cjsD.datasets.forEach(ds=>{ds.datalabels=dlCfg;});
+  CI=new Chart(document.getElementById('mainChart'),{type,data:cjsD,options:{indexAxis:horiz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true},datalabels:{display:false}},scales,layout:{padding}},plugins:[makeBg,ChartDataLabels]});
   if(S.legend&&S.headers){
-    if(isPie){document.getElementById('legendContainer').innerHTML=cjsData.labels.map((lbl,i)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(i)}"></div>${lbl}</div>`).join('');}
-    else if(cjsData.datasets.length>0){document.getElementById('legendContainer').innerHTML=cjsData.datasets.map((ds,si)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(si)}"></div>${ds.label}</div>`).join('');}
-  }else{document.getElementById('legendContainer').innerHTML='';}
+    if(isPie)document.getElementById('legendContainer').innerHTML=cjsD.labels.map((l,i)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(i)}"></div>${l}</div>`).join('');
+    else document.getElementById('legendContainer').innerHTML=cjsD.datasets.map((ds,si)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(si)}"></div>${ds.label}</div>`).join('');
+  }else document.getElementById('legendContainer').innerHTML='';
   document.getElementById('copyBtn').disabled=false;
 }
 
-/* ── Load ── */
+/* ── Load data ── */
 function loadData(raw){
-  const result=parseData(raw),dbg=document.getElementById('debugBox');
-  if(!result||!result.axisLabels.length){document.getElementById('chartStatusTag').textContent='Parse error';document.getElementById('chartStatusTag').className='status-tag';dbg.style.display='block';dbg.textContent='Could not parse. Check format.';PD=null;return;}
-  PD=result;dbg.style.display='block';
-  dbg.innerHTML=`<b>Axis (${result.axisLabels.length}):</b> ${result.axisLabels.join(' | ')}<br><b>Series:</b> ${result.seriesNames.join(', ')}<br><b>Row 0:</b> ${result.matrix.map((col,i)=>result.seriesNames[i]+'='+col[0]).join(', ')}`;
-  document.getElementById('chartStatusTag').textContent=`✓ ${result.axisLabels.length} rows, ${result.seriesNames.length} series`;
-  document.getElementById('chartStatusTag').className='status-tag loaded';
+  const r=parseData(raw),dbg=document.getElementById('debugBox'),tag=document.getElementById('chartStatusTag');
+  if(!r||!r.axisLabels.length){tag.textContent='Parse error';tag.className='status-tag';dbg.style.display='block';dbg.textContent='Could not parse data.';PD=null;return;}
+  PD=r;
+  const n=r.axisLabels.length,lv=r.seriesNames.map((_,si)=>r.matrix[si][n-1]),rc=r.rawLastRow||[];
+  const allZ=lv.every(v=>v===0);
+  const warn=allZ&&rc.some(c=>c!=='0'&&c!=='(empty)'&&c!=='')?`⚠ Line row parsed as zeros — raw: [${rc.join(', ')}]. Values may contain % or $ symbols.`:'';
+  dbg.style.display='block';
+  dbg.innerHTML=`<b>Rows (${n}):</b> ${r.axisLabels.join(' | ')}<br><b>Columns:</b> ${r.seriesNames.join(', ')}<br><b>Last row "${r.axisLabels[n-1]}" raw:</b> [${rc.join(', ')}] → <b>parsed:</b> [${lv.map(fmt).join(', ')}]`+(warn?`<br><span style="color:#ffc940">${warn}</span>`:'');
+  tag.textContent=`✓ ${n} rows × ${r.seriesNames.length} cols`;
+  tag.className=allZ&&warn?'status-tag warn':'status-tag loaded';
 }
 
-/* ── File / paste events ── */
+/* ── Hints ── */
+const HINTS={
+  waterfall:'<strong>Waterfall:</strong> Label + Value columns. Negative = decrease. Add <code>total</code> in col 3 to pin a bar.',
+  combi:'<strong>Combi:</strong> Last <em>row</em> = line series (secondary axis). Other rows = stacked bars.<br><strong>Data Pivot ON</strong> → x = column headers, line values align exactly with x-axis positions.'
+};
+
+/* ── Events ── */
 const dz=document.getElementById('dropZone'),fi=document.getElementById('fileInput'),pa=document.getElementById('pasteArea');
 dz.addEventListener('click',()=>fi.click());
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
@@ -510,7 +588,12 @@ dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{pa.value=ev.target.result;loadData(ev.target.result);};r.readAsText(f);});
 fi.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{pa.value=ev.target.result;loadData(ev.target.result);};r.readAsText(f);});
 pa.addEventListener('input',()=>{if(pa.value.trim().length>5)loadData(pa.value);});
-document.getElementById('chartType').addEventListener('change',()=>{document.getElementById('waterfallHint').style.display=document.getElementById('chartType').value==='waterfall'?'block':'none';if(PD&&CI)renderChart();});
+document.getElementById('chartType').addEventListener('change',()=>{
+  const ct=document.getElementById('chartType').value;
+  const hint=document.getElementById('chartHint');
+  hint.innerHTML=HINTS[ct]||'';hint.style.display=HINTS[ct]?'block':'none';
+  if(PD&&CI)renderChart();
+});
 document.getElementById('renderBtn').addEventListener('click',renderChart);
 document.getElementById('chartTitleInput').addEventListener('change',()=>{if(PD&&CI)renderChart();});
 document.getElementById('noHeaderSeriesName').addEventListener('change',()=>{const raw=pa.value;if(raw.trim().length>5)loadData(raw);if(PD&&CI)renderChart();});
@@ -525,10 +608,11 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   document.getElementById('displayTitle').textContent='Chart preview';
   document.getElementById('copyBtn').disabled=true;
   document.getElementById('copyLabel').textContent='Copy chart';
-  wfPlugin._d=null;_connectorActive=false;_isStacked=false;_cagrActive=false;_cagrSeriesActive=false;
+  document.getElementById('chartHint').style.display='none';
+  wfPlugin._d=null;_connectorActive=false;_isStacked=false;_cagrActive=false;_cagrSeriesActive=false;_combiTotals=null;_isCombi=false;
 });
 
-/* ── Copy PNG ── */
+/* ── PNG export / copy ── */
 async function buildPNG(){
   return new Promise(resolve=>{
     if(!CI)return resolve(null);
@@ -536,14 +620,24 @@ async function buildPNG(){
     const SC=2,lgH=(S.legend&&lg.children.length>0)?lg.offsetHeight+12:0;
     const off=document.createElement('canvas');off.width=cv.offsetWidth*SC;off.height=(cv.offsetHeight+lgH)*SC;
     const ctx=off.getContext('2d');ctx.scale(SC,SC);
-    if(lgH>0){ctx.save();const items=lg.querySelectorAll('.legend-item');let x=0;items.forEach(it=>{const sw=it.querySelector('.legend-swatch');ctx.fillStyle=sw?sw.style.background:'#888';ctx.fillRect(x,6,10,10);ctx.fillStyle='#444';ctx.font='11px sans-serif';const lb=it.textContent.trim();ctx.fillText(lb,x+14,15);x+=ctx.measureText(lb).width+34;});ctx.restore();ctx.translate(0,lgH);}
+    ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,off.width,off.height);
+    if(lgH>0){
+      ctx.save();const items=lg.querySelectorAll('.legend-item');let x=8;
+      items.forEach(it=>{const sw=it.querySelector('.legend-swatch,.legend-sq');
+        if(sw){ctx.fillStyle=sw.style.background||sw.style.fill||'#888';ctx.fillRect(x,6,10,10);}
+        ctx.fillStyle='#aaa';ctx.font='11px sans-serif';const lb=it.textContent.trim();ctx.fillText(lb,x+14,15);x+=ctx.measureText(lb).width+34;});
+      ctx.restore();ctx.translate(0,lgH);
+    }
     ctx.drawImage(cv,0,0,cv.offsetWidth,cv.offsetHeight);
     off.toBlob(blob=>resolve(blob),'image/png');
   });
 }
 document.getElementById('copyBtn').addEventListener('click',async()=>{
   const btn=document.getElementById('copyBtn'),lbl=document.getElementById('copyLabel');
-  if(!navigator.clipboard||!window.ClipboardItem){const blob=await buildPNG();if(!blob)return;const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chart.png';a.click();URL.revokeObjectURL(url);showToast('Clipboard not supported — PNG downloaded');return;}
+  if(!navigator.clipboard||!window.ClipboardItem){
+    const blob=await buildPNG();if(!blob)return;
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chart.png';a.click();URL.revokeObjectURL(url);showToast('PNG downloaded');return;
+  }
   btn.disabled=true;lbl.textContent='Copying…';
   try{
     const blob=await buildPNG();if(!blob)throw new Error('no chart');

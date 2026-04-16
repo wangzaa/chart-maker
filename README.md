@@ -1,171 +1,138 @@
 # Chart Maker
 
-**Make visually effective charts you can paste directly into PowerPoint, Google Slides, Word, or any document — in seconds.**
+A browser-based chart builder with no backend, no build step, and no dependencies beyond Chart.js. Paste CSV data, pick a chart type, and export a PNG — all in one page.
 
-🔗 **[Open Chart Maker →](https://wangzaa.github.io/chart-maker/)**
-
----
-
-## What it does
-
-Chart Maker turns a pasted table or CSV file into a clean, consulting-grade chart with one click. Copy the result to your clipboard and paste it anywhere — no design software, no exports, no fuss.
-
-Works with: **PowerPoint · Google Slides · Keynote · Word · Google Docs · Notion · email**
+**Live:** https://wangzaa.github.io/chart-maker/
 
 ---
 
-## How to use it
+## Chart types
 
-### Step 1 — Paste your data
-
-Copy a table from Excel, Google Sheets, or any spreadsheet and paste it into the **data input box**.
-
-```
-Region,         2022,  2023,  2024
-North America,    42,    51,    68
-Europe,           31,    38,    44
-Asia Pacific,     55,    72,    91
-```
-
-Or drag and drop a `.csv` file directly onto the drop zone.
-
-> **Tip:** Make sure "With headers" is toggled **on** if your first row contains column names.
-
----
-
-### Step 2 — Pick a chart type
-
-Choose from the dropdown:
-
-| Chart type | Best used for |
+| Type | Description |
 |---|---|
-| **Bar chart** | Comparing values across categories |
-| **Stacked bar** | Showing composition and totals |
-| **Waterfall** | Revenue bridges, budget variance |
-| **Line chart** | Trends over time |
-| **Area chart** | Cumulative trends, volume |
-| **Pie chart** | Share of a whole (5 categories max) |
-| **Doughnut** | Same as pie, cleaner look |
+| **Bar chart** | Grouped vertical bars |
+| **Stacked bar** | Stacked vertical bars with optional data labels |
+| **Combi** | Stacked bars + line on a secondary axis |
+| **Waterfall** | Running total bridge chart |
+| **Line chart** | Multi-series line |
+| **Area chart** | Filled line chart |
+| **Pie / Doughnut** | Slice charts with inline labels |
 
 ---
 
-### Step 3 — Choose a colour palette
+## Data format
 
-Three palettes are available:
+Paste or drop a CSV. First column = row labels; first row = column headers.  
+Numbers may include `%`, `$`, `£`, `€`, and thousands commas — they are stripped automatically.
 
-- **Brand** — deep navy → mid blue → light blue → grey (default consulting palette)
-- **Mono** — all grey with white dividers (print-friendly, monochrome)
-- **Alt** — green · navy · orange · teal (alternative brand)
+### Standard (bar, stacked bar, line, area, pie, doughnut)
+
+```
+Region,2022,2023,2024
+North America,42,51,68
+Europe,31,38,44
+Asia Pacific,55,72,91
+```
+
+### Waterfall
+
+Two columns: label + value. Negative values are decreases.  
+Optional third column: set `total` to pin a bar at the running total.
+
+```
+Category,Value
+Starting point,120
+New contracts,45
+Churn,-18
+Expansion,32
+Q4 Total,179,total
+```
+
+### Combi (bar + line)
+
+**Last row** = line series plotted on the secondary (right) axis.  
+All other rows = stacked bars on the primary (left) axis.
+
+```
+Region,2022,2023,2024
+North America,42,51,68
+Europe,31,38,44
+Asia Pacific,55,72,91
+Latin America,12,15,19
+Middle East,8,11,14
+Growth,62,65,76
+```
+
+Toggle **Data Pivot ON** to flip x-axis: columns become categories, rows become bar series.  
+With the example above + Data Pivot: years on x-axis, regions stacked, Growth line visible.
 
 ---
 
-### Step 4 — Set a title (optional)
+## Options
 
-Type your chart title in the **Chart title** field. It will appear above the chart in the output.
-
----
-
-### Step 5 — Adjust options
-
-Use the **Options** toggle strip to refine the chart:
-
-| Toggle | What it does |
+| Toggle | Effect |
 |---|---|
-| **With headers** | Treats the first row as column labels |
-| **Data labels** | Shows values on each bar or slice |
-| **Grid lines** | Adds horizontal guide lines |
-| **Legend** | Shows the series colour key |
-| **Connectors** | Dashed lines between bars (best for stacked charts) |
-| **Data Pivot** | Swaps which dimension is on the axis vs legend |
-| **Rotate 90°** | Flips the chart to horizontal layout |
+| **With headers** | Treat first row as column headers |
+| **Data labels** | Show values inside/above bars and slices |
+| **Grid lines** | Y-axis gridlines |
+| **Legend** | Series colour key |
+| **Connectors** | Dashed lines between bar tops |
+| **CAGR** | Arrow + bubble showing compound annual growth rate |
+| **CAGR (Series)** | Per-series CAGR labels on the right (stacked bar only) |
+| **Data Pivot** | Swap rows ↔ columns (data-level transpose) |
+| **Rotate 90°** | Horizontal bar layout (visual flip only) |
+
+### Colour palettes
+
+| Name | Colours |
+|---|---|
+| **Blue** | `#051C2A` `#163E93` `#30A3DA` `#A2AAAD` `#D9D9D9` |
+| **Mono** | All `#D9D9D9` with white borders |
+| **Alt** | `#00966C` `#113E88` `#F28E42` `#4DC7B1` |
 
 ---
 
-### Step 6 — Render
+## Export
 
-Click **Render chart**. The chart appears instantly below the controls.
-
----
-
-### Step 7 — Copy and paste
-
-Click **Copy chart**.
-
-The chart is copied to your clipboard as a **transparent PNG at 2× resolution** — crisp on any screen, ready to paste onto any background colour.
-
-Then:
-- **PowerPoint / Keynote** → `Ctrl+V` / `Cmd+V` on any slide
-- **Google Slides** → `Ctrl+V` / `Cmd+V`
-- **Word / Google Docs** → `Ctrl+V` / `Cmd+V`
-- **Notion / email** → `Ctrl+V` / `Cmd+V`
-
-> If clipboard copy is blocked by your browser, a PNG file downloads automatically instead. Insert it via Insert → Image.
+Click **Copy chart** to copy the chart canvas as a PNG to the clipboard.  
+Paste directly into PowerPoint, Figma, Notion, etc.  
+If the browser blocks clipboard access, the PNG downloads automatically instead.
 
 ---
 
-## Tips & tricks
+## Tech stack
 
-**Waterfall charts** — just paste two columns (label + value). Positive numbers are increases, negative are decreases. A **Total** bar is added automatically.
+- [Chart.js 4.4.1](https://www.chartjs.org/) — charting engine
+- [chartjs-plugin-datalabels 2.2.0](https://chartjs-plugin-datalabels.netlify.app/) — value labels
+- Vanilla JS / CSS — no framework, no build step
+- Single `index.html` file — deploy anywhere
 
-```
-Label,             Value
-Starting revenue,  500000
-New customers,     150000
-Churn,             -30000
-Upsells,            60000
-Expenses,         -100000
-```
+### Notable implementation details
 
-**Data Pivot** — if your data has regions as rows and years as columns but you want years on the axis, toggle **Data Pivot** on. No need to reformat your spreadsheet.
-
-**Rotate 90°** — long category names (like region names) often look better as a horizontal bar. Toggle **Rotate 90°** to flip without changing the data.
-
-**Stacked bar with connectors** — select **Stacked bar**, then turn on **Connectors** to draw dashed bridge lines between segments across categories. Useful for showing flow between time periods.
-
----
-
-## Supported data formats
-
-- **Comma-separated** (`.csv`)
-- **Tab-separated** (copied from Excel or Google Sheets)
-- **With or without headers** — toggle "With headers" accordingly
-
-Data is processed entirely in your browser. Nothing is sent to any server.
-
----
-
-## Built with
-
-- [Chart.js 4.4](https://www.chartjs.org/) — charting library
-- [chartjs-plugin-datalabels](https://chartjs-plugin-datalabels.netlify.app/) — value labels
-- Vanilla HTML / CSS / JavaScript — no framework, no build step
+- **Combi line-on-top:** Chart.js 4 mixed charts always paint bar rectangles after line paths regardless of `order`. A custom `afterDraw` plugin repaints line datasets after the full chart render, clipped to the chart area.
+- **CAGR arrow:** Custom canvas plugin with dynamic vertical clearance — scans all intermediate bars and lifts the arrow enough to clear the tallest one, then places the oval callout above the midpoint.
+- **y2 scale:** Explicit clean `min`/`max` derived from line data using a "nice number" step algorithm (rounds to `1/2/5/10/20/25/50…` multiples). Avoids Chart.js auto-scale producing odd decimals like `118.3`.
+- **Number parser:** Strips `%`, `$`, `£`, `€`, spaces, and thousands commas before `Number()` conversion.
 
 ---
 
 ## Local development
 
-No build process needed. Just open `index.html` in a browser:
+No build step needed. Just open `index.html` in a browser:
 
 ```bash
 git clone https://github.com/wangzaa/chart-maker.git
 cd chart-maker
-open index.html        # macOS
-start index.html       # Windows
-xdg-open index.html   # Linux
+open index.html          # macOS
+# or: python3 -m http.server 8080
 ```
 
-To deploy updates:
+## Deploying updates
 
 ```bash
-git add index.html
-git commit -m "Update"
+git add index.html README.md
+git commit -m "describe changes"
 git push
 ```
 
-GitHub Pages publishes automatically within ~30 seconds.
-
----
-
-## Licence
-
-MIT — free to use, modify, and share.
+GitHub Pages publishes automatically from `main` root.
