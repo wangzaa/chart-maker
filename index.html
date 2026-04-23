@@ -13,10 +13,6 @@ h1{font-size:18px;font-weight:600;color:var(--text1);margin-bottom:1.25rem;lette
 .top-bar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .panel{background:var(--bg1);border:0.5px solid var(--border);border-radius:10px;padding:1rem 1.25rem;}
 .panel-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
-.drop-zone{border:1px dashed var(--border2);border-radius:7px;padding:.9rem;text-align:center;cursor:pointer;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:background .15s;}
-.drop-zone:hover,.drop-zone.drag-over{background:var(--bg2);}
-.drop-zone p{font-size:13px;color:var(--text2);}
-.drop-zone span{font-size:11px;color:var(--text3);}
 .or-divider{text-align:center;font-size:11px;color:var(--text3);margin:5px 0;}
 textarea.paste-area{width:100%;height:88px;font-size:11.5px;font-family:'SF Mono',Menlo,Consolas,monospace;resize:vertical;border:0.5px solid var(--border);border-radius:7px;padding:8px;background:var(--bg2);color:var(--text1);}
 textarea.paste-area:focus{outline:none;border-color:#30A3DA;}
@@ -72,9 +68,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:#30A3DA;}
 <div class="top-bar">
   <div class="panel">
     <div class="panel-label">Data input</div>
-    <div class="drop-zone" id="dropZone"><p>Drop CSV file here</p><span>or click to browse</span></div>
-    <input type="file" id="fileInput" accept=".csv" style="display:none">
-    <div class="or-divider">— or paste below —</div>
+
     <textarea class="paste-area" id="pasteArea" placeholder="Region,2022,2023,2024&#10;North America,42,51,68&#10;Europe,31,38,44&#10;Asia Pacific,55,72,91&#10;Latin America,12,15,19&#10;Middle East,8,11,14&#10;Growth,62,65,76"></textarea>
     <div id="chartHint" class="chart-hint"></div>
     <div id="debugBox" class="debug-box" style="display:none;"></div>
@@ -90,6 +84,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:#30A3DA;}
       <option value="line-area">Area chart</option>
       <option value="pie">Pie chart</option>
       <option value="doughnut">Doughnut</option>
+      <option value="bubble">Bubble chart</option>
     </select>
     <div style="margin-top:11px;"><div class="panel-label">Chart title</div>
       <input type="text" id="chartTitleInput" placeholder="Enter chart title...">
@@ -175,7 +170,7 @@ document.querySelectorAll('.palette-option').forEach(el=>{
 const WF_POS='#163E93',WF_NEG='#C0392B',WF_TOTAL='#A2AAAD';
 const LIFT=22,BUBBLE_LIFT=26,OVAL_RY=12,CAGR_TOP_PAD=80,CAGR_SERIES_RIGHT_PAD=160,MIN_SEGMENT_PX=8;
 let PD=null,CI=null;
-let _cagrActive=false,_isStacked=false,_cagrSeriesActive=false,_connectorActive=false,_isCombi=false;
+let _cagrActive=false,_isStacked=false,_cagrSeriesActive=false,_connectorActive=false,_isCombi=false,_isBubble=false;
 let _combiTotals=null;
 
 /* ── Toggle state ── */
@@ -338,6 +333,40 @@ const combiLineOnTopPlugin={id:'combiLineOnTop',afterDraw(chart){
 }};
 Chart.register(combiLineOnTopPlugin);
 
+/* ══════════════════════════════════════
+   BUBBLE LABEL PLUGIN
+   Draws text labels on or beside each bubble.
+   Large bubbles (r ≥ 18px): label centred inside.
+   Small bubbles: label to the right.
+   ══════════════════════════════════════ */
+const bubbleLabelPlugin={id:'bubbleLabels',afterDatasetsDraw(chart){
+  if(!_isBubble)return;
+  const ctx=chart.ctx;
+  chart.data.datasets.forEach((ds,di)=>{
+    const meta=chart.getDatasetMeta(di);
+    ds.data.forEach((pt,pi)=>{
+      const el=meta.data[pi];
+      if(!el||!pt._label)return;
+      const r=el.options.radius||pt.r||6;
+      ctx.save();
+      const fs=Math.max(9,Math.min(13,r*0.48));
+      ctx.font=`bold ${fs}px sans-serif`;
+      ctx.textBaseline='middle';
+      if(r>=18){
+        ctx.textAlign='center';
+        ctx.fillStyle=isLightColor(PALETTES[activePalette].colors[di%PALETTES[activePalette].colors.length])?'#222':'#fff';
+        ctx.fillText(pt._label,el.x,el.y);
+      }else{
+        ctx.textAlign='left';
+        ctx.fillStyle='#bbb';
+        ctx.fillText(pt._label,el.x+r+5,el.y);
+      }
+      ctx.restore();
+    });
+  });
+}};
+Chart.register(bubbleLabelPlugin);
+
 /* Waterfall connectors */
 const wfPlugin={id:'wfC',_d:null,afterDraw(c){
   if(!this._d)return;
@@ -385,6 +414,48 @@ function parseData(raw){
     const last=body[body.length-1]||[];
     return{axisLabels,seriesNames,matrix,rowTypes,rawLastRow:seriesNames.map((_,si)=>last[si+ss]||'(empty)')};
   }
+}
+
+/* ── Colour helpers for bubble ── */
+function hexToRgba(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;}
+function isLightColor(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(0.299*r+0.587*g+0.114*b)/255>0.55;}
+
+/* ════════════════════════════════════════════════════════
+   BUBBLE CHART PARSER
+   Expected CSV columns (case-insensitive):
+     Label  — text shown on/near bubble (optional)
+     X      — categorical x-axis position
+     Y      — categorical y-axis position
+     Size   — numeric; controls bubble area (required)
+     Group  — colour group name (optional, defaults to "Default")
+   ════════════════════════════════════════════════════════ */
+function parseBubbleData(raw){
+  const text=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+  if(lines.length<2)return null;
+  const sep=lines[0].indexOf('\t')>=0?'\t':',';
+  const hdr=lines[0].split(sep).map(h=>h.trim().toLowerCase().replace(/[-_ ]/g,''));
+  const iLabel=hdr.findIndex(h=>h==='label'||h==='lbl'||h==='name');
+  const iX=hdr.findIndex(h=>h==='x'||h==='xaxis'||h==='xcategory'||h==='column');
+  const iY=hdr.findIndex(h=>h==='y'||h==='yaxis'||h==='ycategory'||h==='row');
+  const iSize=hdr.findIndex(h=>h==='size'||h==='value'||h==='volume'||h==='count'||h==='amount');
+  const iGroup=hdr.findIndex(h=>h==='group'||h==='category'||h==='color'||h==='colour'||h==='type'||h==='tier');
+  if(iX<0||iY<0||iSize<0)return null;
+  const rows=lines.slice(1).map(line=>{
+    const cols=line.split(sep).map(c=>c.trim().replace(/^["']|["']$/g,''));
+    return{label:iLabel>=0?cols[iLabel]:'',x:cols[iX]||'',y:cols[iY]||'',size:parseNum(cols[iSize]),group:iGroup>=0?(cols[iGroup]||'Default'):'Default'};
+  }).filter(r=>r.x&&r.y&&r.size>0);
+  if(!rows.length)return null;
+  /* ── Mode detection: numeric if every X and Y parses cleanly as a number ── */
+  const isNum=s=>{const c=String(s).replace(/[%$£€\s,]/g,'').trim();return c!==''&&!isNaN(Number(c));};
+  const isNumerical=rows.every(r=>isNum(r.x)&&isNum(r.y));
+  if(isNumerical)rows.forEach(r=>{r.x=parseNum(r.x);r.y=parseNum(r.y);});
+  const xCats=[],yCats=[],groups=[];
+  rows.forEach(r=>{
+    if(!isNumerical){if(!xCats.includes(r.x))xCats.push(r.x);if(!yCats.includes(r.y))yCats.push(r.y);}
+    if(!groups.includes(r.group))groups.push(r.group);
+  });
+  return{rows,xCats,yCats,groups,isNumerical};
 }
 
 /* ══════════════════════════════════════
@@ -445,6 +516,134 @@ function buildCombiData(pd,isPivoted){
   }
 }
 
+}
+
+/* ════════════════════════════════════════════════════════
+   BUBBLE CHART RENDERER
+   Uses Chart.js bubble type with categorical axes.
+   X and Y categories are mapped to integer positions.
+   Bubble radius (px) is √-scaled from the Size column.
+   Labels are drawn by bubbleLabelPlugin.
+   ════════════════════════════════════════════════════════ */
+function renderBubbleChart(bd,wrap){
+  const{rows,xCats,yCats,groups,isNumerical}=bd;
+  const maxSz=Math.max(...rows.map(r=>r.size));
+  function mkDatasets(xyFn,rFn){
+    return groups.map((grp,gi)=>({label:grp,data:rows.filter(r=>r.group===grp).map(r=>({...xyFn(r),r:rFn(r.size),_label:r.label})),backgroundColor:hexToRgba(getColor(gi),0.82),borderColor:getColor(gi),borderWidth:1.5}));
+  }
+
+  if(isNumerical){
+    /* ── Numerical mode: real x,y values, linear axes ── */
+    wrap.style.height='360px';
+    const allX=rows.map(r=>r.x),allY=rows.map(r=>r.y);
+    const xMin=Math.min(...allX),xMax=Math.max(...allX),yMin=Math.min(...allY),yMax=Math.max(...allY);
+    const approxW=(wrap.offsetWidth||700)-80,approxH=360-60;
+    const MAX_R=Math.min(approxW,approxH)*0.09;
+    const getR=sz=>Math.max(4,MAX_R*Math.sqrt(sz/maxSz));
+    const xPad=(xMax-xMin||xMax||1)*.18,yPad=(yMax-yMin||yMax||1)*.18;
+    CI=new Chart(document.getElementById('mainChart'),{
+      type:'bubble',data:{datasets:mkDatasets(r=>({x:r.x,y:r.y}),getR)},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const pt=ctx.raw;return` ${ctx.dataset.label}: ${pt._label||''} (${pt.x}, ${pt.y})`;}}}  ,datalabels:{display:false}},
+        scales:{
+          x:{type:'linear',min:xMin-xPad,max:xMax+xPad,grid:{display:S.grid,color:'rgba(255,255,255,0.08)'},ticks:{color:'#aaa',font:{size:11}}},
+          y:{type:'linear',min:yMin-yPad,max:yMax+yPad,grid:{display:S.grid,color:'rgba(255,255,255,0.08)'},ticks:{color:'#aaa',font:{size:11}}}
+        },layout:{padding:{top:12,right:16,bottom:8,left:8}}},
+      plugins:[makeBg,ChartDataLabels]
+    });
+    if(S.legend){document.getElementById('legendContainer').innerHTML=groups.map((g,gi)=>`<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${getColor(gi)};flex-shrink:0;"></div>${g}</div>`).join('')+'<span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;margin-left:6px;background:rgba(48,163,218,.15);color:#30A3DA;border:0.5px solid rgba(48,163,218,.3);">Numerical</span>';}
+    else document.getElementById('legendContainer').innerHTML='';
+  }else{
+    /* ── Categorical mode: integer-mapped axes, x-axis at top ── */
+    const yRev=[...yCats].reverse();
+    const nX=xCats.length,nY=yCats.length;
+    const CELL_H=Math.max(72,Math.min(110,460/nY));
+    wrap.style.height=(nY*CELL_H+72)+'px';
+    const approxCellW=(wrap.offsetWidth||720)/nX;
+    const MAX_R=Math.min(approxCellW,CELL_H)*0.42;
+    const getR=sz=>Math.max(4,MAX_R*Math.sqrt(sz/maxSz));
+    CI=new Chart(document.getElementById('mainChart'),{
+      type:'bubble',data:{datasets:mkDatasets(r=>({x:xCats.indexOf(r.x),y:yRev.indexOf(r.y)}),getR)},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const pt=ctx.raw;return` ${ctx.dataset.label}: ${pt._label||''} — ${xCats[pt.x]}, ${yRev[pt.y]}`;}}}  ,datalabels:{display:false}},
+        scales:{
+          x:{type:'linear',position:'top',min:-0.5,max:nX-0.5,
+            grid:{display:S.grid,color:'rgba(255,255,255,0.09)'},
+            border:{display:true,color:'rgba(255,255,255,0.15)'},
+            ticks:{stepSize:1,autoSkip:false,maxRotation:0,callback:v=>{const i=Math.round(v);return Math.abs(v-i)<0.01&&i>=0&&i<nX?xCats[i]:'';},color:'#aaa',font:{size:12},padding:8}},
+          y:{type:'linear',min:-0.5,max:nY-0.5,
+            grid:{display:S.grid,color:'rgba(255,255,255,0.09)'},
+            border:{display:true,color:'rgba(255,255,255,0.15)'},
+            ticks:{stepSize:1,autoSkip:false,callback:v=>{const i=Math.round(v);return Math.abs(v-i)<0.01&&i>=0&&i<nY?yRev[i]:'';},color:'#aaa',font:{size:12},padding:8}}
+        },layout:{padding:{top:4,right:16,bottom:16,left:8}}},
+      plugins:[makeBg,ChartDataLabels]
+    });
+    if(S.legend){document.getElementById('legendContainer').innerHTML=groups.map((g,gi)=>`<div class="legend-item"><div style="width:10px;height:10px;border-radius:50%;background:${getColor(gi)};flex-shrink:0;"></div>${g}</div>`).join('')+'<span style="font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;margin-left:6px;background:rgba(112,173,71,.15);color:#a8d87a;border:0.5px solid rgba(112,173,71,.3);">Categorical</span>';}
+    else document.getElementById('legendContainer').innerHTML='';
+  }
+  document.getElementById('copyBtn').disabled=false;
+}
+  const{rows,xCats,yCats,groups}=bd;
+  /* Y is reversed so the first category is at the top */
+  const yRev=[...yCats].reverse();
+  const nX=xCats.length,nY=yCats.length;
+
+  /* Compute cell size → max bubble radius */
+  const CELL_H=Math.max(72,Math.min(110,460/nY));
+  wrap.style.height=(nY*CELL_H+72)+'px';
+  const approxCellW=(wrap.offsetWidth||720)/nX;
+  const MAX_R=Math.min(approxCellW,CELL_H)*0.42;
+  const maxSz=Math.max(...rows.map(r=>r.size));
+  const getR=sz=>Math.max(4,MAX_R*Math.sqrt(sz/maxSz));
+
+  /* One dataset per group (same colour per group) */
+  const datasets=groups.map((grp,gi)=>({
+    label:grp,
+    data:rows.filter(r=>r.group===grp).map(r=>({
+      x:xCats.indexOf(r.x),
+      y:yRev.indexOf(r.y),
+      r:getR(r.size),
+      _label:r.label
+    })),
+    backgroundColor:hexToRgba(getColor(gi),0.82),
+    borderColor:getColor(gi),
+    borderWidth:1.5
+  }));
+
+  CI=new Chart(document.getElementById('mainChart'),{
+    type:'bubble',
+    data:{datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const pt=ctx.raw;
+          return` ${ctx.dataset.label}: ${pt._label||''} — ${xCats[pt.x]}, ${yRev[pt.y]}`;
+        }}},
+        datalabels:{display:false}
+      },
+      scales:{
+        x:{
+          type:'linear',position:'top',
+          min:-0.5,max:nX-0.5,
+          grid:{display:S.grid,color:'rgba(255,255,255,0.09)'},
+          border:{display:true,color:'rgba(255,255,255,0.15)'},
+          ticks:{stepSize:1,autoSkip:false,maxRotation:0,callback:v=>{const i=Math.round(v);return Math.abs(v-i)<0.01&&i>=0&&i<xCats.length?xCats[i]:'';},color:'#aaa',font:{size:12},padding:8}
+        },
+        y:{
+          type:'linear',
+          min:-0.5,max:nY-0.5,
+          grid:{display:S.grid,color:'rgba(255,255,255,0.09)'},
+          border:{display:true,color:'rgba(255,255,255,0.15)'},
+          ticks:{stepSize:1,autoSkip:false,callback:v=>{const i=Math.round(v);return Math.abs(v-i)<0.01&&i>=0&&i<yRev.length?yRev[i]:'';},color:'#aaa',font:{size:12},padding:8}
+        }
+      },
+      layout:{padding:{top:4,right:16,bottom:16,left:8}}
+    },
+    plugins:[makeBg,ChartDataLabels]
+  });
+
 /* ── Standard chart data ── */
 function buildCJSData(pd,ct){
   const{axisLabels,seriesNames,matrix}=pd;
@@ -492,11 +691,12 @@ function renderChart(){
   const title=document.getElementById('chartTitleInput').value||'Chart';
   const isPie=ct==='pie'||ct==='doughnut';
   _isCombi=ct==='combi';
+  _isBubble=ct==='bubble';
   const isLine=ct.startsWith('line');
-  const horiz=S.rotate&&!isPie&&!_isCombi;
-  const pd=(S.dataPivot&&!isPie&&!_isCombi&&ct!=='waterfall')?transposePD(PD):PD;
+  const horiz=S.rotate&&!isPie&&!_isCombi&&!_isBubble;
+  const pd=(S.dataPivot&&!isPie&&!_isCombi&&!_isBubble&&ct!=='waterfall')?transposePD(PD):PD;
   _isStacked=ct==='bar-stacked';
-  _cagrActive=!isPie&&ct!=='waterfall'&&!_isCombi;
+  _cagrActive=!isPie&&ct!=='waterfall'&&!_isCombi&&!_isBubble;
   _cagrSeriesActive=_isStacked&&!horiz&&!_isCombi;
   _combiTotals=null;
   document.getElementById('displayTitle').textContent=title;
@@ -506,6 +706,16 @@ function renderChart(){
 
   const scaleColor='#555',axTick={color:scaleColor,font:{size:11}};
   const gridColor='rgba(255,255,255,0.06)';
+
+  /* ── Bubble chart ── */
+  if(_isBubble){
+    wfPlugin._d=null;_connectorActive=false;
+    const raw=document.getElementById('pasteArea').value;
+    const bd=parseBubbleData(raw);
+    if(!bd){showToast('Bubble format: Label,X,Y,Size,Group — check hint',true);return;}
+    renderBubbleChart(bd,wrap);
+    return;
+  }
 
   /* ── Waterfall ── */
   if(ct==='waterfall'){
@@ -577,16 +787,12 @@ function loadData(raw){
 /* ── Hints ── */
 const HINTS={
   waterfall:'<strong>Waterfall:</strong> Label + Value columns. Negative = decrease. Add <code>total</code> in col 3 to pin a bar.',
-  combi:'<strong>Combi:</strong> Last <em>row</em> = line series (secondary axis). Other rows = stacked bars.<br><strong>Data Pivot ON</strong> → x = column headers, line values align exactly with x-axis positions.'
+  combi:'<strong>Combi:</strong> Last <em>row</em> = line series (secondary axis). Other rows = stacked bars.<br><strong>Data Pivot ON</strong> → x = column headers, line values align exactly with x-axis positions.',
+  bubble:'<strong>Bubble:</strong> Required columns — <code>X</code>, <code>Y</code>, <code>Size</code>. Optional: <code>Label</code> (text on bubble), <code>Group</code> (colour coding).<br>Example: <code>Label,X,Y,Size,Group</code><br><code>17%,West,Rackets,450,High</code>'
 };
 
 /* ── Events ── */
-const dz=document.getElementById('dropZone'),fi=document.getElementById('fileInput'),pa=document.getElementById('pasteArea');
-dz.addEventListener('click',()=>fi.click());
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{pa.value=ev.target.result;loadData(ev.target.result);};r.readAsText(f);});
-fi.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{pa.value=ev.target.result;loadData(ev.target.result);};r.readAsText(f);});
+const pa=document.getElementById('pasteArea');
 pa.addEventListener('input',()=>{if(pa.value.trim().length>5)loadData(pa.value);});
 document.getElementById('chartType').addEventListener('change',()=>{
   const ct=document.getElementById('chartType').value;
@@ -609,7 +815,7 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   document.getElementById('copyBtn').disabled=true;
   document.getElementById('copyLabel').textContent='Copy chart';
   document.getElementById('chartHint').style.display='none';
-  wfPlugin._d=null;_connectorActive=false;_isStacked=false;_cagrActive=false;_cagrSeriesActive=false;_combiTotals=null;_isCombi=false;
+  wfPlugin._d=null;_connectorActive=false;_isStacked=false;_cagrActive=false;_cagrSeriesActive=false;_combiTotals=null;_isCombi=false;_isBubble=false;
 });
 
 /* ── PNG export / copy ── */
