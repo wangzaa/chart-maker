@@ -95,6 +95,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:#30A3DA;}
         <div class="palette-option active" data-pid="blue"><div class="palette-swatches"><div class="swatch" style="background:#051C2A"></div><div class="swatch" style="background:#163E93"></div><div class="swatch" style="background:#30A3DA"></div><div class="swatch" style="background:#A2AAAD"></div><div class="swatch" style="background:#D9D9D9"></div></div><span class="palette-name">Blue</span></div>
         <div class="palette-option" data-pid="mono"><div class="palette-swatches"><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div><div class="swatch outlined" style="background:#D9D9D9"></div></div><span class="palette-name">Mono</span></div>
         <div class="palette-option" data-pid="alt"><div class="palette-swatches"><div class="swatch" style="background:#00966C"></div><div class="swatch" style="background:#113E88"></div><div class="swatch" style="background:#F28E42"></div><div class="swatch" style="background:#4DC7B1"></div></div><span class="palette-name">Alt</span></div>
+        <div class="palette-option" data-pid="red"><div class="palette-swatches"><div class="swatch" style="background:#E60028"></div><div class="swatch" style="background:#3D3D3D"></div><div class="swatch" style="background:#B0A78F"></div><div class="swatch" style="background:#CFC6AC"></div></div><span class="palette-name">Red</span></div>
       </div>
     </div>
     <div style="margin-top:9px;display:none;" id="noHeaderSeriesWrap">
@@ -151,13 +152,14 @@ Chart.unregister(ChartDataLabels);
 const PALETTES={
   blue:{colors:['#051C2A','#163E93','#30A3DA','#A2AAAD','#D9D9D9'],border:null},
   mono:{colors:['#D9D9D9'],border:'#fff'},
-  alt: {colors:['#00966C','#113E88','#F28E42','#4DC7B1'],border:null}
+  alt: {colors:['#00966C','#113E88','#F28E42','#4DC7B1'],border:null},
+  red: {colors:['#E60028','#3D3D3D','#B0A78F','#CFC6AC'],border:null}
 };
 const COMBI_LINE_COLOR='#1a1a1a';
 let activePalette='blue';
 function getColor(si){const p=PALETTES[activePalette];return p.colors[si%p.colors.length];}
 function getBorder(si){const p=PALETTES[activePalette];return p.border||p.colors[si%p.colors.length];}
-function isLightText(si){return['#051C2A','#163E93','#113E88','#00966C'].includes(getColor(si));}
+function isLightText(si){return['#051C2A','#163E93','#113E88','#00966C','#E60028','#3D3D3D'].includes(getColor(si));}
 document.querySelectorAll('.palette-option').forEach(el=>{
   el.addEventListener('click',()=>{
     document.querySelectorAll('.palette-option').forEach(e=>e.classList.remove('active'));
