@@ -583,66 +583,6 @@ function renderBubbleChart(bd,wrap){
   }
   document.getElementById('copyBtn').disabled=false;
 }
-  const{rows,xCats,yCats,groups}=bd;
-  /* Y is reversed so the first category is at the top */
-  const yRev=[...yCats].reverse();
-  const nX=xCats.length,nY=yCats.length;
-
-  /* Compute cell size → max bubble radius */
-  const CELL_H=Math.max(72,Math.min(110,460/nY));
-  wrap.style.height=(nY*CELL_H+72)+'px';
-  const approxCellW=(wrap.offsetWidth||720)/nX;
-  const MAX_R=Math.min(approxCellW,CELL_H)*0.42;
-  const maxSz=Math.max(...rows.map(r=>r.size));
-  const getR=sz=>Math.max(4,MAX_R*Math.sqrt(sz/maxSz));
-
-  /* One dataset per group (same colour per group) */
-  const datasets=groups.map((grp,gi)=>({
-    label:grp,
-    data:rows.filter(r=>r.group===grp).map(r=>({
-      x:xCats.indexOf(r.x),
-      y:yRev.indexOf(r.y),
-      r:getR(r.size),
-      _label:r.label
-    })),
-    backgroundColor:hexToRgba(getColor(gi),0.82),
-    borderColor:getColor(gi),
-    borderWidth:1.5
-  }));
-
-  CI=new Chart(document.getElementById('mainChart'),{
-    type:'bubble',
-    data:{datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>{
-          const pt=ctx.raw;
-          return` ${ctx.dataset.label}: ${pt._label||''} — ${xCats[pt.x]}, ${yRev[pt.y]}`;
-        }}},
-        datalabels:{display:false}
-      },
-      scales:{
-        x:{
-          type:'linear',position:'top',
-          min:-0.5,max:nX-0.5,
-          grid:{display:S.grid,color:'rgba(255,255,255,0.09)'},
-          border:{display:true,color:'rgba(255,255,255,0.15)'},
-          ticks:{stepSize:1,autoSkip:false,maxRotation:0,callback:v=>{const i=Math.round(v);return Math.abs(v-i)<0.01&&i>=0&&i<xCats.length?xCats[i]:'';},color:'#aaa',font:{size:12},padding:8}
-        },
-        y:{
-          type:'linear',
-          min:-0.5,max:nY-0.5,
-          grid:{display:S.grid,color:'rgba(255,255,255,0.09)'},
-          border:{display:true,color:'rgba(255,255,255,0.15)'},
-          ticks:{stepSize:1,autoSkip:false,callback:v=>{const i=Math.round(v);return Math.abs(v-i)<0.01&&i>=0&&i<yRev.length?yRev[i]:'';},color:'#aaa',font:{size:12},padding:8}
-        }
-      },
-      layout:{padding:{top:4,right:16,bottom:16,left:8}}
-    },
-    plugins:[makeBg,ChartDataLabels]
-  });
 
 /* ── Standard chart data ── */
 function buildCJSData(pd,ct){
@@ -704,7 +644,7 @@ function renderChart(){
   const wrap=document.getElementById('canvasWrapper');wrap.style.display='block';
   if(CI){CI.destroy();CI=null;}
 
-  const scaleColor='#555',axTick={color:scaleColor,font:{size:11}};
+  const scaleColor='#aaa',axTick={color:scaleColor,font:{size:11}};
   const gridColor='rgba(255,255,255,0.06)';
 
   /* ── Bubble chart ── */
@@ -763,7 +703,7 @@ function renderChart(){
   if(isPie)cjsD.datasets[0].datalabels=dlCfg;
   else cjsD.datasets.forEach(ds=>{ds.datalabels=dlCfg;});
   CI=new Chart(document.getElementById('mainChart'),{type,data:cjsD,options:{indexAxis:horiz?'y':'x',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true},datalabels:{display:false}},scales,layout:{padding}},plugins:[makeBg,ChartDataLabels]});
-  if(S.legend&&S.headers){
+  if(S.legend){
     if(isPie)document.getElementById('legendContainer').innerHTML=cjsD.labels.map((l,i)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(i)}"></div>${l}</div>`).join('');
     else document.getElementById('legendContainer').innerHTML=cjsD.datasets.map((ds,si)=>`<div class="legend-item"><div class="legend-swatch" style="background:${getColor(si)}"></div>${ds.label}</div>`).join('');
   }else document.getElementById('legendContainer').innerHTML='';
